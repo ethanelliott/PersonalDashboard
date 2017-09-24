@@ -1,0 +1,508 @@
+<html>
+
+<head>
+	<script>
+		if (typeof module === 'object') {
+			window.module = module;
+			module = undefined;
+		}
+	</script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="http://use.fontawesome.com/44027b3b13.js"></script>
+	<script>
+		if (window.module) module = window.module;
+	</script>
+	<link href="https://fonts.googleapis.com/css?family=Roboto:400,100,300,500,700,900,400italic,700italic,300italic" rel="stylesheet" type="text/css" media="screen">
+	<link href="style.css" rel="stylesheet" type="text/css" media="screen">
+</head>
+
+<body>
+	<div class="titlebar">
+		<div class="title-wrapper">
+			<i class="fa fa-graduation-cap" aria-hidden="true" style="font-size:2em;margin-right:0.5em;"></i>
+			<span class="window-title">Ethan's Personal Dashboard</span>
+		</div>
+		<div id="time"></div>
+		<div class="action-buttons-wrapper">
+			<button id="close-btn">X</button>
+			<button id="min-btn"><i class="fa fa-window-minimize" aria-hidden="true"></i></button>
+			<button id="max-btn"><i class="fa fa-window-restore" aria-hidden="true"></i></button>
+			<button id="full-btn"><i class="fa fa-arrows-alt" aria-hidden="true"></i></button>
+			<button id="dev-btn"><i class="fa fa-cogs" aria-hidden="true"></i></button>
+		</div>
+	</div>
+	<div class="content-wrapper">
+		<div class="left-pannel">
+
+		</div>
+		<div class="right-pannel">
+			<div id="pannel-content-wrapper">
+
+			</div>
+		</div>
+	</div>
+	<script>
+		const remote = require('electron').remote;
+		const dialog = remote.dialog;
+		const fs = require('fs');
+		const path = require('path')
+		const url = require('url');
+		const request = require('request-ssl');
+		const cheerio = require('cheerio');
+
+		var jqMenuList = [];
+
+		function loadPageContent(data, jsonContent, cal) {
+			if (jsonContent != undefined) {
+				let out = "";
+				switch (jsonContent.title) {
+					case 'Settings':
+						out += "<div class='title'>" + jsonContent.title + "</div>";
+						out += "<h1>Class List</h1>";
+						out += "<table id='settings-classeslist'>";
+						out += "<tr>" + "<th>Code</th>" + "<th>Name</th>" + "<th>Icon</th>" + "<th>Colour</th>" + "</tr>";
+						for (let i = 0; i < data.classes.length; i++) {
+							out += "<tr>" +
+								"<td>" + data.classes[i].name + "</td>" +
+								"<td>" + data.classes[i].title + "</td>" +
+								"<td>" + data.classes[i].icon + "</td>" +
+								"<td style='background:#" + data.classes[i].color + "'>#" + data.classes[i].color + "</td>" +
+								"</tr>";
+						}
+						out += "</table>";
+						out += "<div class='line-break'></div>";
+						out += "<h1>Fetch Classes From MyCampus</h1>";
+						out += "<span id='settings-mycamploginerror'></span>";
+						out += "<input class='large' id='settings-mycampid-txt' type='text' placeholder='Student ID' /><br />";
+						out += "<input class='large' id='settings-mycamppass-txt' type='password' placeholder='MyCampus password' /><br />";
+						out += "<button id='mycampus-update-btn' class='button'>Update Data from MyCampus</button>";
+						$("#pannel-content-wrapper").html(out);
+						SettingsPageLoadEventRegister();
+						break;
+					case 'Overview':
+						out += "<div class='title'>" + jsonContent.title + "</div>";
+						out += "<div class='column-wrapper'>";
+						out += "<div class='column'>";
+						out += "<h1>Today's Classes:</h1>";
+						let isTomorrowClass = false;
+						for (let i = 0; i < cal.length; i++) {
+							let now = new Date();
+							let classT = new Date(cal[i].startTime);
+							if (now.toLocaleDateString() === classT.toLocaleDateString()) {
+								isTomorrowClass = true;
+								let co = data.classes[data.classes.find(findCourse(cal[i].code))].color;
+								out += "<div class='event' style='border-left: 7px solid #" + +";'>" +
+									"<p class='event-name'>" + cal[i].name + "</p>" +
+									"<p class='event-location'>" + cal[i].place + "</p>" +
+									"<p class='event-time'>" + (new Date(cal[i].startTime)).toLocaleTimeString() + " - " + (new Date(cal[i].endTime)).toLocaleTimeString() + "</p>" +
+									"</div>";
+							}
+						}
+						if (!isTomorrowClass) {
+							out += "<h2>No Class Scheduled</h2>";
+						}
+						out += "<div class='line-break'></div>";
+						out += "<h1>Tomorrow's Classes:</h1>";
+						isTomorrowClass = false;
+						for (let i = 0; i < cal.length; i++) {
+							let now = new Date();
+							now.setTime(now.getTime() + (1000 * 60 * 60 * 24));
+							let classT = new Date(cal[i].startTime);
+							if (now.toLocaleDateString() === classT.toLocaleDateString()) {
+								isTomorrowClass = true;
+								let co = data.classes[data.classes.findIndex(findCourse(cal[i].code))].color;
+								out += "<div class='event' style='border-left: 7px solid #" + co + ";'>" +
+									"<p class='event-name'>" + cal[i].name + "</p>" +
+									"<p class='event-location'>" + cal[i].place + "</p>" +
+									"<p class='event-time'>" + (new Date(cal[i].startTime)).toLocaleTimeString() + " - " + (new Date(cal[i].endTime)).toLocaleTimeString() + "</p>" +
+									"</div>";
+							}
+						}
+						if (!isTomorrowClass) {
+							out += "<h2>No Class Scheduled</h2>";
+						}
+						out += "</div>";
+						out += "<div class='column'>";
+						out += "<h1>To-Do</h1>";
+						out += "</div>";
+						out += "</div>";
+						$("#pannel-content-wrapper").html(out);
+						break;
+					default:
+						out += "<div class='title'>" + jsonContent.title + "</div>";
+						out += "<input id='course-colourselect' type='color' style='width:5em;height:5em;border-radius:100%;' />";
+						if (jsonContent.lecture) {
+							out += "<h1>Lecture - " + jsonContent.lecture.crn + " - " + jsonContent.lecture.times[0].place + "</h1>";
+						}
+						if (jsonContent.tutorial) {
+							out += "<div class='line-break'></div>";
+							out += "<h1>Tutorial - " + jsonContent.tutorial.crn + " - " + jsonContent.tutorial.times[0].place + "</h1>";
+						}
+						if (jsonContent.lab) {
+							out += "<div class='line-break'></div>";
+							out += "<h1>Lab - " + jsonContent.lab.crn + " - " + jsonContent.lab.times[0].place + "</h1>";
+						}
+						$("#pannel-content-wrapper").html(out);
+						console.log(jsonContent.name);
+						CoursePageLoadEventRegister(jsonContent.name);
+						break;
+				}
+			}
+		}
+
+		function findCourse(course) {
+			return function(element) {
+				return element.name === course;
+			};
+		}
+
+		function CoursePageLoadEventRegister(coursecode) {
+			let filePath = "content.json";
+			fs.readFile(filePath, 'utf8', (err, data) => {
+				data = JSON.parse(data);
+				let index = data.classes.findIndex(findCourse(coursecode));
+				if (data.classes[index].color) {
+					$("#course-colourselect").val("#" + data.classes[index].color)
+				}
+			});
+			document.getElementById("course-colourselect").addEventListener("change", (e) => {
+				fs.readFile(filePath, 'utf8', (err, data) => {
+					data = JSON.parse(data);
+					let ind = data.classes.findIndex(findCourse(coursecode));
+					data.classes[ind].color = $("#course-colourselect").val().split("#")[1];
+					let fileContent = JSON.stringify(data);
+					fs.writeFile(filePath, fileContent, (err) => {
+						if (err) {
+							throw err;
+						}
+						loadSideBar(() => {});
+					});
+				});
+			});
+		}
+
+		function loadSideBar(callback) {
+			let filePath = "content.json";
+			let menuListContent = [];
+			jqMenuList = [];
+			$(".left-pannel").html("");
+			fs.readFile(filePath, 'utf8', (err, data) => {
+				data = JSON.parse(data);
+				let classes = data.classes;
+				let pages = data.pages;
+				let stout = "";
+				jqMenuList.push("#menu-overview");
+				menuListContent.push(pages[0]);
+				for (let i = 0; i < classes.length; i++) {
+					stout += '<div id="menu-' + classes[i].name + '" style="background:#' + classes[i].color + '" class="menu-item"><i class="fa fa-' + classes[i].icon + '" aria-hidden="true"></i><span>' + classes[i].name + '</span></div>';
+					jqMenuList.push("#menu-" + classes[i].name);
+					menuListContent.push(classes[i]);
+				}
+				stout = '<div id="menu-overview" class="menu-item"><i class="fa fa-home" aria-hidden="true"></i><span>Overview</span></div>' + stout;
+				stout += '<div id="menu-settings" class="menu-item"><i class="fa fa-cog" aria-hidden="true"></i><span>Settings</span></div>';
+				$(".left-pannel").html(stout);
+				jqMenuList.push("#menu-settings");
+				menuListContent.push(pages[1]);
+				loadPageContent(menuListContent[0]);
+				for (let i = 0; i < jqMenuList.length; i++) {
+					$(jqMenuList[i]).click(() => {
+						fs.readFile("calendar.json", (err, calendar) => {
+							loadPageContent(data, menuListContent[i], JSON.parse(calendar));
+						});
+						for (let i = 0; i < jqMenuList.length; i++) {
+							$(jqMenuList[i]).removeClass('active');
+						}
+						$(jqMenuList[i]).addClass('active');
+					});
+				}
+				$(jqMenuList[0]).addClass('active');
+				callback();
+			});
+		}
+
+		function startTime() {
+			var timeObject = setInterval(() => {
+				let d = new Date();
+				let cl = (d.getHours() < 10 ? "0" : "") + d.getHours() + ":" + (d.getMinutes() < 10 ? "0" : "") + d.getMinutes() + ":" + (d.getSeconds() < 10 ? "0" : "") + d.getSeconds();
+				$("#time").html(cl);
+			}, 100);
+
+		}
+
+		function findCourseType(courseType, courseID) {
+			return function(element) {
+				return element.type === courseType && element.code === courseID;
+			}
+		}
+
+		function SettingsPageLoadEventRegister() {
+			document.getElementById("mycampus-update-btn").addEventListener("click", (e) => {
+				let cal;
+				let username = $("#settings-mycampid-txt").val();
+				let password = $("#settings-mycamppass-txt").val();
+				const payload = {
+					'user': username,
+					'pass': password,
+					'uuid': '0xACA021'
+				};
+				let dd = new Date();
+				let cM = dd.getMonth() + 1;
+				let termDate = "";
+				if (cM > 0 && cM < 9) {
+					termDate = dd.getFullYear() + "01";
+				} else if (cM > 8 && cM < 13) {
+					termDate = dd.getFullYear() + "09";
+				}
+				let detailLoad = {
+					'term_in': termDate
+				};
+				let sess = request.jar();
+				const loginURL = "http://portal.mycampus.ca/cp/home/login";
+				const baseURL = "http://portal.mycampus.ca/cp/ip/login?sys=sct&url=";
+				const detailURL = "http://ssbp.mycampus.ca/prod_uoit/bwskfshd.P_CrseSchdDetl";
+				request.post({
+					url: loginURL,
+					form: payload,
+					jar: sess
+				}, function(err_0, res_0, body_0) {
+					if (!body_0.includes("<title>Error: Failed Login</title>")) {
+						request.get({
+							url: (baseURL + detailURL),
+							jar: sess
+						}, function(err_1, res_1, body_1) {
+							request.post({
+								url: detailURL,
+								form: detailLoad,
+								jar: sess
+							}, function(err_2, res_2, body_2) {
+								let ch = cheerio.load(body_2);
+								let classes = [];
+								ch('acronym').each(function() {
+									classes.push(this);
+								});
+								let CRNS = [];
+								for (let h = 0; h < classes.length; h++) {
+									let timeTable = classes[h].parent.parent.parent.parent.next.next.children[2].children;
+									//console.log(timeTable);
+									let timeTableObject = [];
+									for (let k = 1; k < timeTable.length; k++) {
+										stringArray = ch(timeTable[k]).text().split('\n');
+										if (stringArray[1] != '') {
+											classTimeString = stringArray[2].split(' - ');
+											let location = stringArray[4].split(' ')[stringArray[4].split(' ').length - 1];
+											if (!isNaN(location[0]) && stringArray[4].split(' ')[0] === "Software") {
+												location = "SIRC" + stringArray[4].split(' ')[stringArray[4].split(' ').length - 1];
+											}
+											let classTimeObject = {
+												week: stringArray[1],
+												startTime: classTimeString[0],
+												endTime: classTimeString[1],
+												day: stringArray[3],
+												place: location,
+												dateRange: stringArray[5],
+												type: stringArray[6],
+												instructor: stringArray[7]
+											};
+											timeTableObject.push(classTimeObject);
+										}
+									}
+									let fullClassName = ch(classes[h].parent.parent.parent.parent.children[0]).text().split(' - ');
+									let classInfo = {
+										crn: ch(classes[h].parent.next.next).text(),
+										name: fullClassName[0],
+										code: (fullClassName[1].split(" ")[0] + fullClassName[1].split(" ")[1]).split("U")[0],
+										section: fullClassName[2],
+										times: timeTableObject,
+										type: timeTableObject[0].type
+									};
+									CRNS.push(classInfo);
+								}
+								//We have the classes now!
+								let raw_classFilePath = "raw_class.json";
+								fs.writeFile(raw_classFilePath, JSON.stringify(CRNS), {
+									flags: 'w'
+								}, (err) => {
+									if (err) {
+										throw err;
+									}
+								});
+
+								//Generate Calendar JSON
+								const weekdayReference = {
+									"M": 1,
+									"T": 2,
+									"W": 3,
+									"R": 4,
+									"F": 5
+								};
+								let calArr = [];
+								let eventInfo = {};
+								for (let i = 0; i < CRNS.length; i++) {
+									for (let j = 0; j < CRNS[i].times.length; j++) {
+										let dateRange = CRNS[i].times[j].dateRange.split(" - ");
+										let startTimeDateObject;
+										let endTimeDateObject;
+										if (dateRange[0] === dateRange[1]) {
+											startTimeDateObject = new Date(dateRange[0] + " " + CRNS[i].times[j].startTime);
+											endTimeDateObject = new Date(dateRange[0] + " " + CRNS[i].times[j].endTime);
+											eventInfo = {
+												"code": CRNS[i].code,
+												"crn": CRNS[i].crn,
+												"name": CRNS[i].name,
+												"section": CRNS[i].section,
+												"startTime": startTimeDateObject.getTime(),
+												"endTime": endTimeDateObject.getTime(),
+												"place": CRNS[i].times[j].place,
+												"type": CRNS[i].times[j].type
+											};
+											calArr.push(eventInfo);
+										} else {
+											var dateRangeWeeks = Math.floor((new Date(dateRange[1]).getTime() - new Date(dateRange[0]).getTime()) / (1000 * 60 * 60 * 24 * 7));
+											let start = new Date(dateRange[0]);
+											let end = new Date(dateRange[1]);
+											let delta = (start.getDay() - weekdayReference[CRNS[i].times[j].day]);
+											if (!isNaN(delta)) {
+												if (delta > 0) {
+													start.setTime(start.getTime() + ((7 - delta) * 1000 * 60 * 60 * 24));
+												} else {
+													start.setTime(start.getTime() + ((-1 * delta) * 1000 * 60 * 60 * 24));
+												}
+											}
+											for (let g = 0; g < dateRangeWeeks; g++) {
+												let classDateThing = new Date();
+												classDateThing.setTime(start.getTime() + ((7) * 1000 * 60 * 60 * 24 * g));
+												if (classDateThing.getTime() > (new Date("11/05/17").getTime())) {
+													classDateThing.setTime(start.getTime() + (1 * 1000 * 60 * 60 * 24) + ((7) * 1000 * 60 * 60 * 24 * g));
+												}
+												startTimeDateObject = new Date(classDateThing.toLocaleDateString() + " " + CRNS[i].times[j].startTime);
+												endTimeDateObject = new Date(classDateThing.toLocaleDateString() + " " + CRNS[i].times[j].endTime);
+												eventInfo = {
+													"code": CRNS[i].code,
+													"crn": CRNS[i].crn,
+													"name": CRNS[i].name,
+													"section": CRNS[i].section,
+													"startTime": startTimeDateObject.getTime(),
+													"endTime": endTimeDateObject.getTime(),
+													"place": CRNS[i].times[j].place,
+													"type": CRNS[i].times[j].type
+												};
+												calArr.push(eventInfo);
+											}
+										}
+
+									}
+								}
+
+								let calendarFilePath = "calendar.json";
+								fs.writeFile(calendarFilePath, JSON.stringify(calArr), (err) => {
+									if (err) {
+										console.log(err);
+									}
+								});
+								let filePath = "content.json";
+								fs.readFile(filePath, 'utf8', (err, data) => {
+									data = JSON.parse(data);
+									let classData = [];
+									let courseCodeList = [];
+									for (let i = 0; i < CRNS.length; i++) {
+										if (courseCodeList.indexOf(CRNS[i].code) < 0) {
+											courseCodeList.push(CRNS[i].code);
+											let ClassObject = {
+												"name": CRNS[i].code,
+												"title": CRNS[i].name,
+												"icon": "book",
+												"color": "",
+												"lecture": CRNS.find(findCourseType("Lecture", CRNS[i].code)),
+												"lab": CRNS.find(findCourseType("Laboratory", CRNS[i].code)),
+												"tutorial": CRNS.find(findCourseType("Tutorial", CRNS[i].code))
+											};
+											classData.push(ClassObject);
+										}
+									}
+									data.classes = classData;
+									let fileContent = JSON.stringify(data);
+									fs.writeFile(filePath, fileContent, (err) => {
+										if (err) {
+											throw err;
+										}
+										loadSideBar(() => {});
+									});
+								});
+							});
+						});
+					} else {
+						console.log("Login Error");
+						$("#settings-mycamploginerror").html("Error<br /> Check Login Details<br />");
+					}
+				});
+			});
+		}
+
+		function init() {
+			let writeContent = '{"pages": [{"title": "Overview"}, {"title": "Settings"}],"classes": []}';
+			fs.stat("content.json", (err, stat) => {
+				if (err && err.code == 'ENOENT') {
+					fs.writeFileSync('content.json', writeContent);
+					fs.writeFileSync('calendar.json', "[]");
+				}
+
+				loadSideBar(() => {
+					startTime();
+
+					document.getElementById("min-btn").addEventListener("click", (e) => {
+						const window = remote.getCurrentWindow();
+						window.minimize();
+					});
+					let max_state = false;
+					document.getElementById("max-btn").addEventListener("click", (e) => {
+						const window = remote.getCurrentWindow();
+						if (!max_state) {
+							window.maximize();
+							max_state = true;
+						} else {
+							window.unmaximize();
+							max_state = false;
+						}
+					});
+
+					document.getElementById("close-btn").addEventListener("click", (e) => {
+						const window = remote.getCurrentWindow();
+						window.close();
+					});
+
+					document.getElementById("dev-btn").addEventListener("click", (e) => {
+						const win = remote.getCurrentWindow();
+						win.webContents.openDevTools();
+					});
+
+					document.getElementById("full-btn").addEventListener("click", (e) => {
+						const BrowserWindow = remote.BrowserWindow;
+						var win = new BrowserWindow({
+							width: 800,
+							height: 600,
+							frame: false
+						});
+						win.setMenu(null);
+						win.show();
+						win.focus();
+						win.loadURL(url.format({
+							pathname: path.join(__dirname, '/window.html'),
+							protocol: 'file:',
+							slashes: true
+						}));
+					});
+				});
+			});
+		};
+
+		document.onreadystatechange = () => {
+			if (document.readyState == "complete") {
+				const win = remote.getCurrentWindow();
+				win.webContents.openDevTools();
+				init();
+			}
+		};
+	</script>
+</body>
+
+</html>

@@ -1,0 +1,47 @@
+<html>
+
+<head>
+	<script src="http://use.fontawesome.com/44027b3b13.js"></script>
+	<style>
+		html {
+			background: rgba(0, 0, 0, 1);
+			-webkit-app-region: drag;
+		}
+
+		input {
+			-webkit-user-select: none;
+			user-select: none;
+			cursor: default;
+			-webkit-app-region: no-drag;
+		}
+	</style>
+</head>
+
+<body>
+	<input type="button" id="full-btn" value="FULL"></input>
+	<script>
+		(function() {
+
+			const remote = require('electron').remote;
+			const dialog = remote.dialog;
+
+			function init() {
+				let fullToggle = false;
+				document.getElementById("full-btn").addEventListener("click", function(e) {
+					fullToggle = !fullToggle;
+					const window = remote.getCurrentWindow();
+					window.setFullScreen(fullToggle);
+				});
+			};
+
+			document.onreadystatechange = function() {
+				if (document.readyState == "complete") {
+					init();
+				}
+			};
+
+		})();
+	</script>
+</body>
+
+</html>

@@ -57,3 +57,8 @@ typings/
 # dotenv environment variables file
 .env
 
+yarn.lock
+
+calendar.json
+content.json
+raw_class.json
