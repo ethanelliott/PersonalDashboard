@@ -42,6 +42,7 @@
 		</div>
 	</div>
 	<script>
+		const dev = true;
 		const remote = require('electron').remote;
 		const dialog = remote.dialog;
 		const fs = require('fs');
@@ -143,7 +144,6 @@
 							out += "<h1>Lab - " + jsonContent.lab.crn + " - " + jsonContent.lab.times[0].place + "</h1>";
 						}
 						$("#pannel-content-wrapper").html(out);
-						console.log(jsonContent.name);
 						CoursePageLoadEventRegister(jsonContent.name);
 						break;
 				}
@@ -310,7 +310,7 @@
 									let classInfo = {
 										crn: ch(classes[h].parent.next.next).text(),
 										name: fullClassName[0],
-										code: (fullClassName[1].split(" ")[0] + fullClassName[1].split(" ")[1]).split("U")[0],
+										code: (fullClassName[1].split(" ")[0] + fullClassName[1].split(" ")[1]).slice(0, -1),
 										section: fullClassName[2],
 										times: timeTableObject,
 										type: timeTableObject[0].type
@@ -498,7 +498,9 @@
 		document.onreadystatechange = () => {
 			if (document.readyState == "complete") {
 				const win = remote.getCurrentWindow();
-				win.webContents.openDevTools();
+				if (dev) {
+					win.webContents.openDevTools();
+				}
 				init();
 			}
 		};
