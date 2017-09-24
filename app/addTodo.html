@@ -1,0 +1,196 @@
+<html>
+
+<head>
+	<script>
+		if (typeof module === 'object') {
+			window.module = module;
+			module = undefined;
+		}
+	</script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="http://use.fontawesome.com/44027b3b13.js"></script>
+	<script>
+		if (window.module) module = window.module;
+	</script>
+	<link href="https://fonts.googleapis.com/css?family=Roboto:400,100,300,500,700,900,400italic,700italic,300italic" rel="stylesheet" type="text/css" media="screen">
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			--main-c: rgba(50, 50, 50, 1);
+		}
+
+		html {
+			background: rgba(0, 0, 0, 1);
+			-webkit-app-region: drag;
+			color: white;
+			font-family: 'Roboto', sans-serif;
+			font-size: 14px;
+		}
+
+		input,
+		select {
+			-webkit-user-select: none;
+			user-select: none;
+			cursor: default;
+			-webkit-app-region: no-drag;
+			width: 100%;
+			font-size: 2em;
+			outline: none;
+			border: none;
+			margin-top: 1em;
+			padding: 0.4em;
+			color: white;
+			background: rgba(83, 82, 82, 1);
+		}
+
+		button {
+			-webkit-user-select: none;
+			user-select: none;
+			cursor: default;
+			-webkit-app-region: no-drag;
+			width: 100%;
+			font-size: 2em;
+			outline: none;
+			border: none;
+			margin-top: 1em;
+			background: var(--main-c);
+			padding: 0.4em;
+			color: white;
+		}
+
+		body {
+			width: 100%;
+			height: 100%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
+		.content-wrapper {
+			width: 90%;
+		}
+
+		.title {
+			font-size: 3em;
+			text-align: center;
+			margin-bottom: 0.5em;
+		}
+
+		.error {
+			color: red;
+			text-align: center;
+			font-size: 2em;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="content-wrapper">
+		<div class="title">
+			New To-Do
+		</div>
+		<div class="error">
+
+		</div>
+		<input id="todo-name" type="text" placeholder="To-do" />
+		<select id="todo-class"></select>
+		<input id="todo-date" type="date" />
+		<input id="todo-time" type="time" />
+		<button id="addtodo-add-btn">Add</button>
+	</div>
+	<script>
+		(function() {
+
+			const remote = require('electron').remote;
+			const dialog = remote.dialog;
+			const fs = require('fs');
+			const crypto = require('crypto');
+
+			function findCourseByCode(code) {
+				return (element) => {
+					return element.name === code;
+				};
+			}
+
+			function init() {
+				let fullToggle = false;
+
+				fs.readFile("content.json", (err, data) => {
+					data = JSON.parse(data);
+					let out = "";
+					for (let i = 0; i < data.classes.length; i++) {
+						let c = data.classes[i].name;
+						out += "<option value='" + c + "'>" + c + "</option>"
+					}
+					$("#todo-class").html(out);
+
+					$("#todo-class").change(() => {
+						let backC = "#" + data.classes[data.classes.findIndex(findCourseByCode($("#todo-class").val()))].color;
+						$("html").css({
+							"background": backC
+						});
+					});
+					let backC = "#" + data.classes[data.classes.findIndex(findCourseByCode($("#todo-class").val()))].color;
+					$("html").css({
+						"background": backC
+					});
+				});
+
+				document.getElementById("addtodo-add-btn").addEventListener("click", (e) => {
+					if ($("#todo-name").val() && $("#todo-class").val() && $("#todo-date").val() && $("#todo-time").val()) {
+						fs.readFile("todo_list.json", (err, data) => {
+							data = JSON.parse(data);
+							let d = new Date($("#todo-date").val() + " " + $("#todo-time").val());
+							let newTodoObject = {
+								"id": saltAndHash($("#todo-name").val()),
+								"name": $("#todo-name").val(),
+								"code": $("#todo-class").val(),
+								"date": d.getTime()
+							};
+							data.push(newTodoObject);
+							fs.writeFile("todo_list.json", JSON.stringify(data), (err) => {
+								let w = remote.getCurrentWindow();
+								w.close();
+							});
+						});
+					} else {
+						$(".error").html("Please fill out all fields.");
+					}
+				});
+			};
+
+			var saltLength = 5;
+			var generateSalt = function() {
+				var set = '0123456789abcdefghijklmnopqurstuvwxyzABCDEFGHIJKLMNOPQURSTUVWXYZ';
+				var salt = '';
+				for (var i = 0; i < saltLength; i++) {
+					var p = Math.floor(Math.random() * set.length);
+					salt += set[p];
+				}
+				return salt;
+			};
+			var hash = function(str) {
+				return crypto.createHash('md5').update(str).digest('HEX');
+			};
+			var saltAndHash = function(pass) {
+				var salt = generateSalt();
+				return salt + hash(pass + salt) + hash(salt);
+			};
+
+			document.onreadystatechange = function() {
+				let dev = true;
+				if (document.readyState == "complete") {
+					const win = remote.getCurrentWindow();
+					if (dev) {
+						win.webContents.openDevTools();
+					}
+					init();
+				}
+			};
+
+		})();
+	</script>
+</body>
+
+</html>

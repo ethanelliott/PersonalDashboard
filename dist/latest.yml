@@ -1,7 +1,7 @@
-version: 1.0.0
-releaseDate: '2017-09-24T17:55:55.904Z'
-path: EPD Setup 1.0.0.exe
+version: 1.0.1
+releaseDate: '2017-09-24T22:45:01.413Z'
+path: EPD Setup 1.0.1.exe
 sha512: >-
-  +x0rMEEt0nT4v7oiiV0nVkdDoNncFiWWxVsW7UCjR/OmOCZTbOFD5xkt8p+Nvsl2FP8pzdHXY357yPbwiFq61g==
-sha2: 571f98f04548dc58a050e149381c4b1a693203a4d00584efd4b4e7c1b17b593c
-githubArtifactName: EPD-Setup-1.0.0.exe
+  KeCGjTvc69grx/1PaNFFZJSGzrp/WVxk4vsxgMZ9hx3qYzSRzWjXbz6BnUONyqlBKKNVNLX7BBU3p5ciRLjmWQ==
+sha2: 2257b7801e4e2b67fc72c91a8aca6db320abc02aee26cb50c5db8706d9abc7d5
+githubArtifactName: EPD-Setup-1.0.1.exe

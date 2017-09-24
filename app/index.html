@@ -9,6 +9,7 @@
 	</script>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script src="http://use.fontawesome.com/44027b3b13.js"></script>
+	<script src="jquery.countdown.min.js"></script>
 	<script>
 		if (window.module) module = window.module;
 	</script>
@@ -50,110 +51,221 @@
 		const url = require('url');
 		const request = require('request-ssl');
 		const cheerio = require('cheerio');
+		const crypto = require('crypto');
 
 		var jqMenuList = [];
+		var menuListContent = [];
+		var screenUpdateInterval;
 
-		function loadPageContent(data, jsonContent, cal) {
+		function loadPageContent(menuListArrayIndex) {
+			jsonContent = menuListContent[menuListArrayIndex];
 			if (jsonContent != undefined) {
-				let out = "";
-				switch (jsonContent.title) {
-					case 'Settings':
-						out += "<div class='title'>" + jsonContent.title + "</div>";
-						out += "<h1>Class List</h1>";
-						out += "<table id='settings-classeslist'>";
-						out += "<tr>" + "<th>Code</th>" + "<th>Name</th>" + "<th>Icon</th>" + "<th>Colour</th>" + "</tr>";
-						for (let i = 0; i < data.classes.length; i++) {
-							out += "<tr>" +
-								"<td>" + data.classes[i].name + "</td>" +
-								"<td>" + data.classes[i].title + "</td>" +
-								"<td>" + data.classes[i].icon + "</td>" +
-								"<td style='background:#" + data.classes[i].color + "'>#" + data.classes[i].color + "</td>" +
-								"</tr>";
-						}
-						out += "</table>";
-						out += "<div class='line-break'></div>";
-						out += "<h1>Fetch Classes From MyCampus</h1>";
-						out += "<span id='settings-mycamploginerror'></span>";
-						out += "<input class='large' id='settings-mycampid-txt' type='text' placeholder='Student ID' /><br />";
-						out += "<input class='large' id='settings-mycamppass-txt' type='password' placeholder='MyCampus password' /><br />";
-						out += "<button id='mycampus-update-btn' class='button'>Update Data from MyCampus</button>";
-						$("#pannel-content-wrapper").html(out);
-						SettingsPageLoadEventRegister();
-						break;
-					case 'Overview':
-						out += "<div class='title'>" + jsonContent.title + "</div>";
-						out += "<div class='column-wrapper'>";
-						out += "<div class='column'>";
-						out += "<h1>Today's Classes:</h1>";
-						let isTomorrowClass = false;
-						for (let i = 0; i < cal.length; i++) {
-							let now = new Date();
-							let classT = new Date(cal[i].startTime);
-							if (now.toLocaleDateString() === classT.toLocaleDateString()) {
-								isTomorrowClass = true;
-								let co = data.classes[data.classes.find(findCourse(cal[i].code))].color;
-								out += "<div class='event' style='border-left: 7px solid #" + +";'>" +
-									"<p class='event-name'>" + cal[i].name + "</p>" +
-									"<p class='event-location'>" + cal[i].place + "</p>" +
-									"<p class='event-time'>" + (new Date(cal[i].startTime)).toLocaleTimeString() + " - " + (new Date(cal[i].endTime)).toLocaleTimeString() + "</p>" +
-									"</div>";
-							}
-						}
-						if (!isTomorrowClass) {
-							out += "<h2>No Class Scheduled</h2>";
-						}
-						out += "<div class='line-break'></div>";
-						out += "<h1>Tomorrow's Classes:</h1>";
-						isTomorrowClass = false;
-						for (let i = 0; i < cal.length; i++) {
-							let now = new Date();
-							now.setTime(now.getTime() + (1000 * 60 * 60 * 24));
-							let classT = new Date(cal[i].startTime);
-							if (now.toLocaleDateString() === classT.toLocaleDateString()) {
-								isTomorrowClass = true;
-								let co = data.classes[data.classes.findIndex(findCourse(cal[i].code))].color;
-								out += "<div class='event' style='border-left: 7px solid #" + co + ";'>" +
-									"<p class='event-name'>" + cal[i].name + "</p>" +
-									"<p class='event-location'>" + cal[i].place + "</p>" +
-									"<p class='event-time'>" + (new Date(cal[i].startTime)).toLocaleTimeString() + " - " + (new Date(cal[i].endTime)).toLocaleTimeString() + "</p>" +
-									"</div>";
-							}
-						}
-						if (!isTomorrowClass) {
-							out += "<h2>No Class Scheduled</h2>";
-						}
-						out += "</div>";
-						out += "<div class='column'>";
-						out += "<h1>To-Do</h1>";
-						out += "</div>";
-						out += "</div>";
-						$("#pannel-content-wrapper").html(out);
-						break;
-					default:
-						out += "<div class='title'>" + jsonContent.title + "</div>";
-						out += "<input id='course-colourselect' type='color' style='width:5em;height:5em;border-radius:100%;' />";
-						if (jsonContent.lecture) {
-							out += "<h1>Lecture - " + jsonContent.lecture.crn + " - " + jsonContent.lecture.times[0].place + "</h1>";
-						}
-						if (jsonContent.tutorial) {
-							out += "<div class='line-break'></div>";
-							out += "<h1>Tutorial - " + jsonContent.tutorial.crn + " - " + jsonContent.tutorial.times[0].place + "</h1>";
-						}
-						if (jsonContent.lab) {
-							out += "<div class='line-break'></div>";
-							out += "<h1>Lab - " + jsonContent.lab.crn + " - " + jsonContent.lab.times[0].place + "</h1>";
-						}
-						$("#pannel-content-wrapper").html(out);
-						CoursePageLoadEventRegister(jsonContent.name);
-						break;
+				if (screenUpdateInterval) {
+					clearInterval(screenUpdateInterval);
 				}
+				fs.readFile("content.json", (err, data) => {
+					data = JSON.parse(data);
+					fs.readFile("calendar.json", (err, calendar) => {
+						let cal = JSON.parse(calendar);
+						let out = "";
+						switch (jsonContent.title) {
+							case 'Settings':
+								out += "<div class='title'>" + jsonContent.title + "</div>";
+								out += "<h1>Class List</h1>";
+								out += "<table id='settings-classeslist'>";
+								out += "<tr>" + "<th>Code</th>" + "<th>Name</th>" + "<th>Icon</th>" + "<th>Colour</th>" + "</tr>";
+								for (let i = 0; i < data.classes.length; i++) {
+									out += "<tr>" +
+										"<td>" + data.classes[i].name + "</td>" +
+										"<td>" + data.classes[i].title + "</td>" +
+										"<td>" + data.classes[i].icon + "</td>" +
+										"<td style='background:#" + data.classes[i].color + "'>#" + data.classes[i].color + "</td>" +
+										"</tr>";
+								}
+								out += "</table>";
+								out += "<div class='line-break'></div>";
+								out += "<h1>Fetch Classes From MyCampus</h1>";
+								out += "<span id='settings-mycamploginerror'></span>";
+								out += "<input class='large' id='settings-mycampid-txt' type='text' placeholder='Student ID' /><br />";
+								out += "<input class='large' id='settings-mycamppass-txt' type='password' placeholder='MyCampus password' /><br />";
+								out += "<button id='mycampus-update-btn' class='button'>Update Data from MyCampus</button>";
+								$("#pannel-content-wrapper").html(out);
+								SettingsPageLoadEventRegister();
+								break;
+							case 'Overview':
+								screenUpdateInterval = setInterval(() => {
+									loadPageContent(menuListArrayIndex);
+								}, (1000 * 60));
+								out += "<div class='title'>" + jsonContent.title + "</div>";
+								out += "<div class='row-wrapper'>";
+								out += "<div class='column'><div class='column-content'>";
+								out += "<h1>Today's Classes:</h1>";
+								let isTomorrowClass = false;
+								let countDownsArr = [];
+								for (let i = 0; i < cal.length; i++) {
+									let now = new Date();
+									let classT = new Date(cal[i].startTime);
+									if (now.toLocaleDateString() === classT.toLocaleDateString()) {
+										isTomorrowClass = true;
+										let co = data.classes[data.classes.find(findCourse(cal[i].code))].color;
+										let classCountHash = saltAndHash(cal[i].crn);
+										out += "<div class='event' style='border-left: 7px solid #" + +";'>" +
+											"<p class='event-name'>" + cal[i].name + "</p>" +
+											"<p class='event-location'>" + cal[i].place + "</p>" +
+											"<p class='event-time'>" + (new Date(cal[i].startTime)).toLocaleTimeString() + " - " + (new Date(cal[i].endTime)).toLocaleTimeString() + "</p>" +
+											"<div class='countd' id='" + classCountHash + "'><span id='" + classCountHash + "-text'></span></div>" +
+											"</div>";
+										countDownsArr.push({
+											"container": classCountHash,
+											"text": classCountHash + '-text',
+											"time": cal[i].startTime
+										});
+									}
+								}
+								if (!isTomorrowClass) {
+									out += "<h2>No Class Scheduled</h2>";
+								}
+								out += "<div class='line-break'></div>";
+								out += "<h1>Tomorrow's Classes:</h1>";
+								isTomorrowClass = false;
+								for (let i = 0; i < cal.length; i++) {
+									let now = new Date();
+									now.setTime(now.getTime() + (1000 * 60 * 60 * 24));
+									let classT = new Date(cal[i].startTime);
+									if (now.toLocaleDateString() === classT.toLocaleDateString()) {
+										isTomorrowClass = true;
+										let co = data.classes[data.classes.findIndex(findCourse(cal[i].code))].color;
+										let classCountHash = saltAndHash(cal[i].crn);
+										out += "<div class='event' style='border-left: 7px solid #" + co + ";'>" +
+											"<p class='event-name'>" + cal[i].name + "</p>" +
+											"<p class='event-location'>" + cal[i].place + "</p>" +
+											"<p class='event-time'>" + (new Date(cal[i].startTime)).toLocaleTimeString() + " - " + (new Date(cal[i].endTime)).toLocaleTimeString() + "</p>" +
+											"<div class='countd' id='" + classCountHash + "'><span id='" + classCountHash + "-text'></span></div>" +
+											"</div>";
+										countDownsArr.push({
+											"container": classCountHash,
+											"text": classCountHash + '-text',
+											"time": cal[i].startTime
+										});
+									}
+								}
+								if (!isTomorrowClass) {
+									out += "<h2>No Class Scheduled</h2>";
+								}
+								out += "</div></div>";
+								out += "<div class='column'><div class='column-content'>";
+								out += "<div class='row-wrapper' style='justify-content:space-between;align-items:center;'><h1>To-Do</h1><button id='overview-addtodo-btn' style='width:2em;height:2em;' class='button'>+</button></div>";
+								let list_todo = fs.readFileSync("todo_list.json");
+								if (list_todo != "") {
+									list_todo = JSON.parse(list_todo);
+								} else {
+									list_todo = [];
+								}
+								let toDoArr = [];
+								for (let i = 0; i < list_todo.length; i++) {
+									let co = data.classes[data.classes.findIndex(findCourse(list_todo[i].code))].color;
+									//let todoID = saltAndHash(list_todo[i].name);
+									let todoID = list_todo[i].id;
+									toDoArr.push(todoID);
+									out += "<div id=" + todoID + " class='todo' style='border-left: 7px solid #" + co + ";'>" +
+										"<div class='to-do-content-wrapper'>" +
+										"<p class='todo-name'>" + list_todo[i].name + "</p>" +
+										"<p class='todo-code'>" + list_todo[i].code + "</p>" +
+										"</div>" +
+										"</div>";
+								}
+								out += "</div></div>";
+								out += "</div>";
+								$("#pannel-content-wrapper").html(out);
+								for (let i = 0; i < countDownsArr.length; i++) {
+									let tObj = new Date(countDownsArr[i].time);
+									let countStr = tObj.getFullYear() + "/" + (tObj.getMonth() + 1) + "/" + tObj.getDate() + " " + tObj.getHours() + ":" + tObj.getMinutes();
+									$("#" + countDownsArr[i].container).countdown(countStr, (event) => {
+										$("#" + countDownsArr[i].text).html(
+											event.strftime('in %H hrs, %M mins')
+										);
+									});
+								}
+								for (let i = 0; i < toDoArr.length; i++) {
+									$("#" + toDoArr[i]).click(() => {
+										$("#" + toDoArr[i]).fadeOut();
+										setTimeout(() => {
+											$("#" + toDoArr[i]).remove();
+											fs.readFile("todo_list.json", (err, ToDodata) => {
+												ToDodata = JSON.parse(ToDodata);
+												ToDodata.splice(ToDodata.findIndex(findTodoID(toDoArr[i])), 1);
+												fs.writeFile("todo_list.json", JSON.stringify(ToDodata), (err) => {});
+											});
+										}, 1500);
+									});
+								}
+								OverviewPageLoadEventRegister();
+								break;
+							default:
+								out += "<div class='title'>" + jsonContent.title + "</div>";
+								out += "<input id='course-colourselect' type='color' style='width:5em;height:5em;border-radius:100%;' />";
+								if (jsonContent.lecture) {
+									out += "<h1>Lecture - " + jsonContent.lecture.crn + " - " + jsonContent.lecture.times[0].place + "</h1>";
+								}
+								if (jsonContent.tutorial) {
+									out += "<div class='line-break'></div>";
+									out += "<h1>Tutorial - " + jsonContent.tutorial.crn + " - " + jsonContent.tutorial.times[0].place + "</h1>";
+								}
+								if (jsonContent.lab) {
+									out += "<div class='line-break'></div>";
+									out += "<h1>Lab - " + jsonContent.lab.crn + " - " + jsonContent.lab.times[0].place + "</h1>";
+								}
+								$("#pannel-content-wrapper").html(out);
+								CoursePageLoadEventRegister(jsonContent.name);
+								break;
+						}
+					});
+				});
 			}
+		}
+
+		function findTodoID(id) {
+			return function(element) {
+				return element.id === id;
+			};
 		}
 
 		function findCourse(course) {
 			return function(element) {
 				return element.name === course;
 			};
+		}
+
+		function OverviewPageLoadEventRegister() {
+			document.getElementById("overview-addtodo-btn").addEventListener("click", (e) => {
+				const BrowserWindow = remote.BrowserWindow;
+				var win = new BrowserWindow({
+					parent: remote.getCurrentWindow(),
+					modal: true,
+					width: 400,
+					height: 600,
+					minHeight: 600,
+					minWidth: 400,
+					maxHeight: 600,
+					maxWidth: 400,
+					frame: false
+				});
+				win.on('close', () => {
+					remote.getCurrentWindow().show();
+					remote.getCurrentWindow().focus();
+					loadPageContent(0);
+				});
+				win.setMenu(null);
+				win.loadURL(url.format({
+					pathname: path.join(__dirname, '/addTodo.html'),
+					protocol: 'file:',
+					slashes: true
+				}));
+				win.once('ready-to-show', () => {
+					win.show();
+					win.focus();
+				});
+			});
 		}
 
 		function CoursePageLoadEventRegister(coursecode) {
@@ -183,7 +295,6 @@
 
 		function loadSideBar(callback) {
 			let filePath = "content.json";
-			let menuListContent = [];
 			jqMenuList = [];
 			$(".left-pannel").html("");
 			fs.readFile(filePath, 'utf8', (err, data) => {
@@ -203,12 +314,10 @@
 				$(".left-pannel").html(stout);
 				jqMenuList.push("#menu-settings");
 				menuListContent.push(pages[1]);
-				loadPageContent(menuListContent[0]);
+				loadPageContent(0);
 				for (let i = 0; i < jqMenuList.length; i++) {
 					$(jqMenuList[i]).click(() => {
-						fs.readFile("calendar.json", (err, calendar) => {
-							loadPageContent(data, menuListContent[i], JSON.parse(calendar));
-						});
+						loadPageContent(i);
 						for (let i = 0; i < jqMenuList.length; i++) {
 							$(jqMenuList[i]).removeClass('active');
 						}
@@ -444,6 +553,7 @@
 				if (err && err.code == 'ENOENT') {
 					fs.writeFileSync('content.json', writeContent);
 					fs.writeFileSync('calendar.json', "[]");
+					fs.writeFileSync('todo_list.json', "[]");
 				}
 
 				loadSideBar(() => {
@@ -493,6 +603,24 @@
 					});
 				});
 			});
+		};
+
+		var saltLength = 5;
+		var generateSalt = function() {
+			var set = '0123456789abcdefghijklmnopqurstuvwxyzABCDEFGHIJKLMNOPQURSTUVWXYZ';
+			var salt = '';
+			for (var i = 0; i < saltLength; i++) {
+				var p = Math.floor(Math.random() * set.length);
+				salt += set[p];
+			}
+			return salt;
+		};
+		var hash = function(str) {
+			return crypto.createHash('md5').update(str).digest('HEX');
+		};
+		var saltAndHash = function(pass) {
+			var salt = generateSalt();
+			return salt + hash(pass + salt) + hash(salt);
 		};
 
 		document.onreadystatechange = () => {

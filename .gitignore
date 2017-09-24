@@ -62,3 +62,6 @@ yarn.lock
 calendar.json
 content.json
 raw_class.json
+todo_list.json
+
+dist/
