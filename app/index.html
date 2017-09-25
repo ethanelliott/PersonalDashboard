@@ -43,7 +43,7 @@
 		</div>
 	</div>
 	<script>
-		const dev = true;
+		const dev = false;
 		const remote = require('electron').remote;
 		const dialog = remote.dialog;
 		const fs = require('fs');
@@ -107,11 +107,12 @@
 									let classT = new Date(cal[i].startTime);
 									if (now.toLocaleDateString() === classT.toLocaleDateString()) {
 										isTomorrowClass = true;
-										let co = data.classes[data.classes.find(findCourse(cal[i].code))].color;
+
+										let co = data.classes[data.classes.findIndex(findCourse(cal[i].code))].color;
 										let classCountHash = saltAndHash(cal[i].crn);
-										out += "<div class='event' style='border-left: 7px solid #" + +";'>" +
+										out += "<div class='event' style='border-left: 7px solid #" + co + ";'>" +
 											"<p class='event-name'>" + cal[i].name + "</p>" +
-											"<p class='event-location'>" + cal[i].place + "</p>" +
+											"<p class='event-location'>" + cal[i].type + " - " + cal[i].place + "</p>" +
 											"<p class='event-time'>" + (new Date(cal[i].startTime)).toLocaleTimeString() + " - " + (new Date(cal[i].endTime)).toLocaleTimeString() + "</p>" +
 											"<div class='countd' id='" + classCountHash + "'><span id='" + classCountHash + "-text'></span></div>" +
 											"</div>";
@@ -138,7 +139,7 @@
 										let classCountHash = saltAndHash(cal[i].crn);
 										out += "<div class='event' style='border-left: 7px solid #" + co + ";'>" +
 											"<p class='event-name'>" + cal[i].name + "</p>" +
-											"<p class='event-location'>" + cal[i].place + "</p>" +
+											"<p class='event-location'>" + cal[i].type + " - " + cal[i].place + "</p>" +
 											"<p class='event-time'>" + (new Date(cal[i].startTime)).toLocaleTimeString() + " - " + (new Date(cal[i].endTime)).toLocaleTimeString() + "</p>" +
 											"<div class='countd' id='" + classCountHash + "'><span id='" + classCountHash + "-text'></span></div>" +
 											"</div>";
@@ -158,6 +159,7 @@
 								let list_todo = fs.readFileSync("todo_list.json");
 								if (list_todo != "") {
 									list_todo = JSON.parse(list_todo);
+									list_todo.sort(sortTodoList);
 								} else {
 									list_todo = [];
 								}
@@ -167,12 +169,20 @@
 									//let todoID = saltAndHash(list_todo[i].name);
 									let todoID = list_todo[i].id;
 									toDoArr.push(todoID);
+									let dtodo = new Date(list_todo[i].date);
 									out += "<div id=" + todoID + " class='todo' style='border-left: 7px solid #" + co + ";'>" +
 										"<div class='to-do-content-wrapper'>" +
 										"<p class='todo-name'>" + list_todo[i].name + "</p>" +
 										"<p class='todo-code'>" + list_todo[i].code + "</p>" +
+										"<p class='todo-date'>" + dtodo.toLocaleString() + "</p>" +
+										"<div class='countd' id='" + list_todo[i].id + "'><span id='" + list_todo[i].id + "-text'></span></div>" +
 										"</div>" +
 										"</div>";
+									countDownsArr.push({
+										"container": list_todo[i].id,
+										"text": list_todo[i].id + '-text',
+										"time": list_todo[i].date
+									});
 								}
 								out += "</div></div>";
 								out += "</div>";
@@ -181,9 +191,12 @@
 									let tObj = new Date(countDownsArr[i].time);
 									let countStr = tObj.getFullYear() + "/" + (tObj.getMonth() + 1) + "/" + tObj.getDate() + " " + tObj.getHours() + ":" + tObj.getMinutes();
 									$("#" + countDownsArr[i].container).countdown(countStr, (event) => {
-										$("#" + countDownsArr[i].text).html(
-											event.strftime('in %H hrs, %M mins')
-										);
+										if (parseInt(event.strftime('%D')) > 0) {
+											$("#" + countDownsArr[i].text).html(event.strftime('in %D day' + (parseInt(event.strftime('%D')) > 1 ? 's' : '') + ', %H hr' + (parseInt(event.strftime('%H')) > 1 ? 's' : '') + ', %M min' + (parseInt(event.strftime('%M')) > 1 ? 's' :
+												'')));
+										} else {
+											$("#" + countDownsArr[i].text).html(event.strftime('in %H hr' + (parseInt(event.strftime('%H')) > 1 ? 's' : '') + ', %M min' + (parseInt(event.strftime('%M')) > 1 ? 's' : '')));
+										}
 									});
 								}
 								for (let i = 0; i < toDoArr.length; i++) {
@@ -222,6 +235,10 @@
 					});
 				});
 			}
+		}
+
+		function sortTodoList(a, b) {
+			return a.date - b.date;
 		}
 
 		function findTodoID(id) {
@@ -503,6 +520,9 @@
 								}
 
 								let calendarFilePath = "calendar.json";
+								calArr.sort((a, b) => {
+									return a.startTime - b.startTime;
+								});
 								fs.writeFile(calendarFilePath, JSON.stringify(calArr), (err) => {
 									if (err) {
 										console.log(err);
@@ -537,11 +557,13 @@
 										loadSideBar(() => {});
 									});
 								});
+								loadSideBar(() => {});
 							});
 						});
 					} else {
 						console.log("Login Error");
 						$("#settings-mycamploginerror").html("Error<br /> Check Login Details<br />");
+						loadSideBar(() => {});
 					}
 				});
 			});
