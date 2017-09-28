@@ -57,6 +57,25 @@
 		var menuListContent = [];
 		var screenUpdateInterval;
 
+		function colorFade(col, amt) {
+			var usePound = false;
+			if (col[0] == "#") {
+				col = col.slice(1);
+				usePound = true;
+			}
+			var num = parseInt(col, 16);
+			var r = (num >> 16) + amt;
+			if (r > 255) r = 255;
+			else if (r < 0) r = 0;
+			var b = ((num >> 8) & 0x00FF) + amt;
+			if (b > 255) b = 255;
+			else if (b < 0) b = 0;
+			var g = (num & 0x0000FF) + amt;
+			if (g > 255) g = 255;
+			else if (g < 0) g = 0;
+			return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
+		}
+
 		function loadPageContent(menuListArrayIndex) {
 			jsonContent = menuListContent[menuListArrayIndex];
 			if (jsonContent != undefined) {
@@ -98,29 +117,31 @@
 								}, (1000 * 60));
 								out += "<div class='title'>" + jsonContent.title + "</div>";
 								out += "<div class='row-wrapper'>";
-								out += "<div class='column'><div class='column-content'>";
+								out += "<div class='column' style='width:100%;padding:1em;'><div class='column-content'>";
 								out += "<h1>Today's Classes:</h1>";
 								let isTomorrowClass = false;
 								let countDownsArr = [];
 								for (let i = 0; i < cal.length; i++) {
 									let now = new Date();
 									let classT = new Date(cal[i].startTime);
+									let classE = new Date(cal[i].endTime);
 									if (now.toLocaleDateString() === classT.toLocaleDateString()) {
 										isTomorrowClass = true;
-
 										let co = data.classes[data.classes.findIndex(findCourse(cal[i].code))].color;
 										let classCountHash = saltAndHash(cal[i].crn);
-										out += "<div class='event' style='border-left: 7px solid #" + co + ";'>" +
+										out += "<div class='event " + (now.getTime() > classE.getTime() ? "strikeout" : "") + "' style='border-left: 7px solid #" + co + ";'>" +
 											"<p class='event-name'>" + cal[i].name + "</p>" +
 											"<p class='event-location'>" + cal[i].type + " - " + cal[i].place + "</p>" +
-											"<p class='event-time'>" + (new Date(cal[i].startTime)).toLocaleTimeString() + " - " + (new Date(cal[i].endTime)).toLocaleTimeString() + "</p>" +
-											"<div class='countd' id='" + classCountHash + "'><span id='" + classCountHash + "-text'></span></div>" +
-											"</div>";
-										countDownsArr.push({
-											"container": classCountHash,
-											"text": classCountHash + '-text',
-											"time": cal[i].startTime
-										});
+											"<p class='event-time'>" + (new Date(cal[i].startTime)).toLocaleTimeString() + " - " + (new Date(cal[i].endTime)).toLocaleTimeString() + "</p>";
+										if (now.getTime() < classE.getTime()) {
+											out += "<div class='countd' id='" + classCountHash + "'><span id='" + classCountHash + "-text'></span></div>";
+											countDownsArr.push({
+												"container": classCountHash,
+												"text": classCountHash + '-text',
+												"time": (now.getTime() > cal[i].startTime ? cal[i].endTime : cal[i].startTime)
+											});
+										}
+										out += "</div>";
 									}
 								}
 								if (!isTomorrowClass) {
@@ -154,7 +175,7 @@
 									out += "<h2>No Class Scheduled</h2>";
 								}
 								out += "</div></div>";
-								out += "<div class='column'><div class='column-content'>";
+								out += "<div class='column'  style='width:100%;padding:1em;'><div class='column-content'>";
 								out += "<div class='row-wrapper' style='justify-content:space-between;align-items:center;'><h1>To-Do</h1><button id='overview-addtodo-btn' style='width:2em;height:2em;' class='button'>+</button></div>";
 								let list_todo = fs.readFileSync("todo_list.json");
 								if (list_todo != "") {
@@ -166,17 +187,20 @@
 								let toDoArr = [];
 								for (let i = 0; i < list_todo.length; i++) {
 									let co = data.classes[data.classes.findIndex(findCourse(list_todo[i].code))].color;
-									//let todoID = saltAndHash(list_todo[i].name);
-									let todoID = list_todo[i].id;
+									let todoID = list_todo[i];
 									toDoArr.push(todoID);
 									let dtodo = new Date(list_todo[i].date);
-									out += "<div id=" + todoID + " class='todo' style='border-left: 7px solid #" + co + ";'>" +
+									out += "<div id=" + list_todo[i].id + " class='todo' style='border-left: 10px solid #" + co + ";background: #" + colorFade(co, 180) + "'>" +
+										"<div class='row-wrapper'>" +
 										"<div class='to-do-content-wrapper'>" +
 										"<p class='todo-name'>" + list_todo[i].name + "</p>" +
 										"<p class='todo-code'>" + list_todo[i].code + "</p>" +
 										"<p class='todo-date'>" + dtodo.toLocaleString() + "</p>" +
 										"<div class='countd' id='" + list_todo[i].id + "'><span id='" + list_todo[i].id + "-text'></span></div>" +
 										"</div>" +
+										"<div class='to-do-icon-wrapper'><i class='fa fa-exclamation-triangle' aria-hidden='true'></i></div>" +
+										"</div>" +
+										"<div id='" + list_todo[i].id + "' class='todo-progress'><div id='" + list_todo[i].id + "' class='todo-progress-bar'></div></div>" +
 										"</div>";
 									countDownsArr.push({
 										"container": list_todo[i].id,
@@ -190,23 +214,26 @@
 								for (let i = 0; i < countDownsArr.length; i++) {
 									let tObj = new Date(countDownsArr[i].time);
 									let countStr = tObj.getFullYear() + "/" + (tObj.getMonth() + 1) + "/" + tObj.getDate() + " " + tObj.getHours() + ":" + tObj.getMinutes();
-									$("#" + countDownsArr[i].container).countdown(countStr, (event) => {
+									$("#" + countDownsArr[i].container + ".countd").countdown(countStr, (event) => {
 										if (parseInt(event.strftime('%D')) > 0) {
 											$("#" + countDownsArr[i].text).html(event.strftime('in %D day' + (parseInt(event.strftime('%D')) > 1 ? 's' : '') + ', %H hr' + (parseInt(event.strftime('%H')) > 1 ? 's' : '') + ', %M min' + (parseInt(event.strftime('%M')) > 1 ? 's' :
 												'')));
-										} else {
+										} else if (parseInt(event.strftime('%H')) > 0) {
 											$("#" + countDownsArr[i].text).html(event.strftime('in %H hr' + (parseInt(event.strftime('%H')) > 1 ? 's' : '') + ', %M min' + (parseInt(event.strftime('%M')) > 1 ? 's' : '')));
+										} else {
+											$("#" + countDownsArr[i].text).html(event.strftime('in %M min' + (parseInt(event.strftime('%M')) > 1 ? 's' : '')));
 										}
 									});
 								}
 								for (let i = 0; i < toDoArr.length; i++) {
-									$("#" + toDoArr[i]).click(() => {
-										$("#" + toDoArr[i]).fadeOut();
+									moveProgressBar(toDoArr[i]);
+									$("#" + toDoArr[i].id + ".todo").click(() => {
+										$("#" + toDoArr[i].id + ".todo").fadeOut();
 										setTimeout(() => {
-											$("#" + toDoArr[i]).remove();
+											$("#" + toDoArr[i].id + ".todo").remove();
 											fs.readFile("todo_list.json", (err, ToDodata) => {
 												ToDodata = JSON.parse(ToDodata);
-												ToDodata.splice(ToDodata.findIndex(findTodoID(toDoArr[i])), 1);
+												ToDodata.splice(ToDodata.findIndex(findTodoID(toDoArr[i].id)), 1);
 												fs.writeFile("todo_list.json", JSON.stringify(ToDodata), (err) => {});
 											});
 										}, 1500);
@@ -235,6 +262,29 @@
 					});
 				});
 			}
+		}
+
+		function moveProgressBar(_x) {
+			var interval = setInterval(() => {
+				let _now = new Date();
+				let _done = new Date(_x.date);
+				let _start = new Date(_x.timeCreated);
+				let perComplete = 100 - (Math.floor(((_now.getTime() - _start.getTime()) / (_done.getTime() - _start.getTime())) * 1000) / 10);
+				let str_perComplete = perComplete + "%";
+				let str_roundPerComplete = Math.floor(perComplete) + "%";
+				$("#" + _x.id + ".todo-progress-bar").css({
+					"width": str_perComplete
+				});
+				//$("#" + _x.id + ".todo-progress-bar").html(str_roundPerComplete);
+				if (perComplete <= 0) {
+					perComplete = 0;
+					clearInterval(interval);
+				}
+				if (perComplete <= 10) {
+
+				}
+				//console.log((((10 - perComplete) / 10) * 0.1));
+			}, 500);
 		}
 
 		function sortTodoList(a, b) {
