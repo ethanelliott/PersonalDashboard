@@ -142,11 +142,13 @@
 						fs.readFile("todo_list.json", (err, data) => {
 							data = JSON.parse(data);
 							let d = new Date($("#todo-date").val() + " " + $("#todo-time").val());
+							let now = new Date();
 							let newTodoObject = {
 								"id": saltAndHash($("#todo-name").val()),
 								"name": $("#todo-name").val(),
 								"code": $("#todo-class").val(),
-								"date": d.getTime()
+								"date": d.getTime(),
+								"timeCreated": now.getTime()
 							};
 							data.push(newTodoObject);
 							fs.writeFile("todo_list.json", JSON.stringify(data), (err) => {
