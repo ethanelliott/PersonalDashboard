@@ -437,10 +437,11 @@
 				let todo_data = fs.readFileSync("todo_list.json", 'utf8');
 				todo_data = JSON.parse(todo_data);
 				for (let i = 0; i < todo_data.length; i++) {
+					let fullItemCalColor = (todo_data[i].code === "other" ? "000000" : classData.classes[classData.classes.findIndex(findCourse(todo_data[i].code))].color);
 					let newCale = {
-						title: todo_data[i].name + " - " + todo_data[i].code,
+						title: todo_data[i].name,
 						start: moment(todo_data[i].date),
-						color: "#" + classData.classes[classData.classes.findIndex(findCourse(todo_data[i].code))].color,
+						color: "#" + fullItemCalColor,
 						allDay: true
 					}
 					calendarEvents.push(newCale);
