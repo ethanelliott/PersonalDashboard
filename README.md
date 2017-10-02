@@ -1,4 +1,4 @@
-# PersonalDashboard
+# UOIT Personal Dashboard
 
 Personal Dashboard for UOIT students.
 Just login with your UOIT MyCampus credentials, and let the application get all the important information for you!
@@ -10,6 +10,13 @@ Just login with your UOIT MyCampus credentials, and let the application get all 
 * Customizable colours and icons for each class
 * Full-screen dashboard with all the important information for your day
 * To-do countdowns with close to due date warnings
+
+## Latest Stable Build
+
+version|release date|platform|download
+---|---|---|---
+v1.2.9|02/10/17|windows|()[]
+
 
 ## Build
 
