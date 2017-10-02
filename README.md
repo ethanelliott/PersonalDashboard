@@ -1,5 +1,8 @@
 # UOIT Personal Dashboard
 
+
+[![Travis](https://img.shields.io/travis/ethanelliott/PersonalDashboard.svg?style=flat-square)](https://travis-ci.org/ethanelliott/PersonalDashboard)
+
 Personal Dashboard for UOIT students.
 Just login with your UOIT MyCampus credentials, and let the application get all the important information for you!
 
