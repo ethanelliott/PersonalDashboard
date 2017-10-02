@@ -28,11 +28,18 @@
 			font-size: 14px;
 		}
 
+		select {
+			cursor: pointer;
+		}
+
+		input {
+			cursor: text;
+		}
+
 		input,
 		select {
 			-webkit-user-select: none;
 			user-select: none;
-			cursor: default;
 			-webkit-app-region: no-drag;
 			width: 100%;
 			font-size: 2em;
@@ -50,6 +57,7 @@
 			cursor: default;
 			-webkit-app-region: no-drag;
 			width: 100%;
+			margin: 0 0.5em;
 			font-size: 2em;
 			outline: none;
 			border: none;
@@ -57,6 +65,11 @@
 			background: var(--main-c);
 			padding: 0.4em;
 			color: white;
+		}
+
+		button:hover {
+			cursor: pointer;
+			background: rgba(33, 32, 32, 1)
 		}
 
 		body {
@@ -79,8 +92,17 @@
 
 		.error {
 			color: red;
+			-webkit-text-stroke: 1px white;
 			text-align: center;
 			font-size: 2em;
+		}
+
+		.button-wrapper {
+			display: flex;
+			width: 100%;
+			justify-content: center;
+			align-items: center;
+			flex-direction: row;
 		}
 	</style>
 </head>
@@ -97,7 +119,10 @@
 		<select id="todo-class"></select>
 		<input id="todo-date" type="date" />
 		<input id="todo-time" type="time" />
-		<button id="addtodo-add-btn">Add</button>
+		<div class="button-wrapper">
+			<button id="addtodo-cancel-btn">Cancel</button>
+			<button id="addtodo-add-btn">Add</button>
+		</div>
 	</div>
 	<script>
 		(function() {
@@ -137,6 +162,10 @@
 					});
 				});
 
+				document.getElementById("addtodo-cancel-btn").addEventListener("click", (e) => {
+					remote.getCurrentWindow().close();
+				});
+
 				document.getElementById("addtodo-add-btn").addEventListener("click", (e) => {
 					if ($("#todo-name").val() && $("#todo-class").val() && $("#todo-date").val() && $("#todo-time").val()) {
 						fs.readFile("todo_list.json", (err, data) => {
@@ -152,8 +181,7 @@
 							};
 							data.push(newTodoObject);
 							fs.writeFile("todo_list.json", JSON.stringify(data), (err) => {
-								let w = remote.getCurrentWindow();
-								w.close();
+								remote.getCurrentWindow().close();
 							});
 						});
 					} else {

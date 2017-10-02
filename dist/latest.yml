@@ -1,7 +1,7 @@
-version: 1.1.7
-releaseDate: '2017-09-25T15:31:05.846Z'
-path: EPD Setup 1.1.7.exe
+version: 1.2.2
+releaseDate: '2017-10-02T01:23:05.942Z'
+path: UOITPD Setup 1.2.2.exe
 sha512: >-
-  22sYLDjBvawR9zz+ZQn8jY7oEnBxN+p7YmX3RtCaoS8pVl6FHf4P0SKV1Ln+YFocp8E+YcsLHAwEtKWMEHYWAg==
-sha2: 3244a5889d88b72ebc0b47b128f89f8b02fbdca537776e536c9090d3f0091e51
-githubArtifactName: EPD-Setup-1.1.7.exe
+  GoFnzk81nT8ythdqbxIz+cP1/L7Un59h94KsYJw1zHdNhyYC5o7pzxWan+cd3j2oNfn/rq5v9ZX+ybQZqgzsbQ==
+sha2: 3b83ec1da514354aab148a13f9e0289e923d0521f1ec518c640ac76cc4f5023f
+githubArtifactName: UOITPD-Setup-1.2.2.exe

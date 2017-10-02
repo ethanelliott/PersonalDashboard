@@ -1,6 +1,11 @@
 <html>
 
 <head>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<link href="http://fonts.googleapis.com/css?family=Roboto:400,100,300,500,700,900,400italic,700italic,300italic" rel="stylesheet" type="text/css" media="screen">
+	<link href="http://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.5.1/fullcalendar.min.css" rel="stylesheet" type="text/css" media="screen" />
+	<link href="http://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.5.1/fullcalendar.print.css" rel="stylesheet" type="text/css" media="print" />
+	<link href="style.css" rel="stylesheet" type="text/css" media="screen">
 	<script>
 		if (typeof module === 'object') {
 			window.module = module;
@@ -8,20 +13,20 @@
 		}
 	</script>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://momentjs.com/downloads/moment.min.js"></script>
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.1.0/fullcalendar.js'></script>
 	<script src="http://use.fontawesome.com/44027b3b13.js"></script>
 	<script src="jquery.countdown.min.js"></script>
 	<script>
 		if (window.module) module = window.module;
 	</script>
-	<link href="https://fonts.googleapis.com/css?family=Roboto:400,100,300,500,700,900,400italic,700italic,300italic" rel="stylesheet" type="text/css" media="screen">
-	<link href="style.css" rel="stylesheet" type="text/css" media="screen">
 </head>
 
 <body>
 	<div class="titlebar">
 		<div class="title-wrapper">
 			<i class="fa fa-graduation-cap" aria-hidden="true" style="font-size:2em;margin-right:0.5em;"></i>
-			<span class="window-title">Ethan's Personal Dashboard</span>
+			<span class="window-title"></span>
 		</div>
 		<div id="time"></div>
 		<div class="action-buttons-wrapper">
@@ -110,6 +115,12 @@
 								out += "<button id='mycampus-update-btn' class='button'>Update Data from MyCampus</button>";
 								$("#pannel-content-wrapper").html(out);
 								SettingsPageLoadEventRegister();
+								break;
+							case 'Calendar':
+								out += "<div class='title'>" + jsonContent.title + "</div>";
+								out += "<div id='calendar'></div>";
+								$("#pannel-content-wrapper").html(out);
+								CalendarPageLoadEventRegister();
 								break;
 							case 'Overview':
 								screenUpdateInterval = setInterval(() => {
@@ -303,6 +314,46 @@
 			};
 		}
 
+		function CalendarPageLoadEventRegister() {
+			let calendarEvents = [];
+			let filePath = "calendar.json";
+			fs.readFile(filePath, 'utf8', (err, data) => {
+				let classData = fs.readFileSync("content.json", 'utf8');
+				classData = JSON.parse(classData);
+				data = JSON.parse(data);
+				for (let i = 0; i < data.length; i++) {
+					let index = classData.classes.findIndex(findCourse(data[i].code));
+					let newCale = {
+						title: data[i].name + " " + data[i].type,
+						start: moment(data[i].startTime),
+						end: moment(data[i].endTime),
+						color: "#" + classData.classes[index].color
+					}
+					calendarEvents.push(newCale);
+				}
+				$('#calendar').fullCalendar({
+					header: {
+						left: 'prev, next today',
+						center: 'title',
+						right: ''
+					},
+					width: 'parent',
+					height: 'parent',
+					defaultView: 'agendaWeek',
+					themeSystem: 'bootstrap3',
+					nowIndicator: true,
+					editable: false,
+					events: calendarEvents,
+					businessHours: {
+						dow: [1, 2, 3, 4, 5],
+						start: '8:00',
+						end: '21:00',
+					}
+				});
+			});
+
+		}
+
 		function OverviewPageLoadEventRegister() {
 			document.getElementById("overview-addtodo-btn").addEventListener("click", (e) => {
 				const BrowserWindow = remote.BrowserWindow;
@@ -366,21 +417,26 @@
 			$(".left-pannel").html("");
 			fs.readFile(filePath, 'utf8', (err, data) => {
 				data = JSON.parse(data);
+				console.log(data.userName);
+				$(".window-title").text((data.userName && data.userName != "" ? data.userName + "'s Personal Dashboard" : "Personal Dashboard"));
 				let classes = data.classes;
 				let pages = data.pages;
 				let stout = "";
 				jqMenuList.push("#menu-overview");
+				jqMenuList.push("#menu-calendar");
 				menuListContent.push(pages[0]);
+				menuListContent.push(pages[1]);
 				for (let i = 0; i < classes.length; i++) {
 					stout += '<div id="menu-' + classes[i].name + '" style="background:#' + classes[i].color + '" class="menu-item"><i class="fa fa-' + classes[i].icon + '" aria-hidden="true"></i><span>' + classes[i].name + '</span></div>';
 					jqMenuList.push("#menu-" + classes[i].name);
 					menuListContent.push(classes[i]);
 				}
-				stout = '<div id="menu-overview" class="menu-item"><i class="fa fa-home" aria-hidden="true"></i><span>Overview</span></div>' + stout;
+				stout = '<div id="menu-overview" class="menu-item"><i class="fa fa-home" aria-hidden="true"></i><span>Overview</span></div>' +
+					'<div id="menu-calendar" class="menu-item"><i class="fa fa-calendar" aria-hidden="true"></i><span>Calendar</span></div>' + stout;
 				stout += '<div id="menu-settings" class="menu-item"><i class="fa fa-cog" aria-hidden="true"></i><span>Settings</span></div>';
 				$(".left-pannel").html(stout);
 				jqMenuList.push("#menu-settings");
-				menuListContent.push(pages[1]);
+				menuListContent.push(pages[2]);
 				loadPageContent(0);
 				for (let i = 0; i < jqMenuList.length; i++) {
 					$(jqMenuList[i]).click(() => {
@@ -436,12 +492,29 @@
 				const loginURL = "http://portal.mycampus.ca/cp/home/login";
 				const baseURL = "http://portal.mycampus.ca/cp/ip/login?sys=sct&url=";
 				const detailURL = "http://ssbp.mycampus.ca/prod_uoit/bwskfshd.P_CrseSchdDetl";
+				const nameURL = "http://ssbp.mycampus.ca/prod_uoit/bwskoacc.P_ViewAcctTotal"
 				request.post({
 					url: loginURL,
 					form: payload,
 					jar: sess
 				}, function(err_0, res_0, body_0) {
 					if (!body_0.includes("<title>Error: Failed Login</title>")) {
+						request.get({
+							url: (baseURL + nameURL),
+							jar: sess
+						}, function(err_01, res_01, body_01) {
+							let na = cheerio.load(body_01);
+							let nameContentArray = [];
+							na('p.whitespace1').each(function() {
+								nameContentArray.push(this);
+							});
+							nameContentArray = nameContentArray[0];
+							let name = nameContentArray.children[0].data.replace('\n', '').split(' ')[0];
+							let cont = fs.readFileSync("content.json", 'utf8');
+							cont = JSON.parse(cont);
+							cont.userName = name;
+							fs.writeFileSync("content.json", JSON.stringify(cont));
+						});
 						request.get({
 							url: (baseURL + detailURL),
 							jar: sess
@@ -544,7 +617,7 @@
 													start.setTime(start.getTime() + ((-1 * delta) * 1000 * 60 * 60 * 24));
 												}
 											}
-											for (let g = 0; g < dateRangeWeeks; g++) {
+											for (let g = 0; g <= dateRangeWeeks; g++) {
 												let classDateThing = new Date();
 												classDateThing.setTime(start.getTime() + ((7) * 1000 * 60 * 60 * 24 * g));
 												if (classDateThing.getTime() > (new Date("11/05/17").getTime())) {
@@ -573,11 +646,7 @@
 								calArr.sort((a, b) => {
 									return a.startTime - b.startTime;
 								});
-								fs.writeFile(calendarFilePath, JSON.stringify(calArr), (err) => {
-									if (err) {
-										console.log(err);
-									}
-								});
+								fs.writeFileSync(calendarFilePath, JSON.stringify(calArr));
 								let filePath = "content.json";
 								fs.readFile(filePath, 'utf8', (err, data) => {
 									data = JSON.parse(data);
@@ -620,7 +689,7 @@
 		}
 
 		function init() {
-			let writeContent = '{"pages": [{"title": "Overview"}, {"title": "Settings"}],"classes": []}';
+			let writeContent = '{"userName":"","pages": [{"title": "Overview"}, {"title": "Calendar"}, {"title": "Settings"}],"classes": []}';
 			fs.stat("content.json", (err, stat) => {
 				if (err && err.code == 'ENOENT') {
 					fs.writeFileSync('content.json', writeContent);
