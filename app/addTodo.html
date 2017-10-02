@@ -30,6 +30,7 @@
 
 		select {
 			cursor: pointer;
+			font-size: 1.5em !important;
 		}
 
 		input {
@@ -117,6 +118,7 @@
 		</div>
 		<input id="todo-name" type="text" placeholder="To-do" />
 		<select id="todo-class"></select>
+		<input id="todo-other-title" type="text" placeholder="subject" />
 		<input id="todo-date" type="date" />
 		<input id="todo-time" type="time" />
 		<div class="button-wrapper">
@@ -145,21 +147,46 @@
 					data = JSON.parse(data);
 					let out = "";
 					for (let i = 0; i < data.classes.length; i++) {
-						let c = data.classes[i].name;
-						out += "<option value='" + c + "'>" + c + "</option>"
+						out += "<option value='" + data.classes[i].name + "'>" + data.classes[i].title + "</option>"
 					}
+					out += "<option value='other'>Other</option>";
 					$("#todo-class").html(out);
-
+					var dtToday = new Date();
+					var month = dtToday.getMonth() + 1;
+					var day = dtToday.getDate();
+					var year = dtToday.getFullYear();
+					if (month < 10) {
+						month = '0' + month.toString();
+					}
+					if (day < 10) {
+						day = '0' + day.toString();
+					}
+					var minDate = year + '-' + month + '-' + day;
+					$('#todo-date').attr('min', minDate);
 					$("#todo-class").change(() => {
-						let backC = "#" + data.classes[data.classes.findIndex(findCourseByCode($("#todo-class").val()))].color;
+						let backC = "";
+						if ($("#todo-class").val() === "other") {
+							$("#todo-other-title").fadeIn(100);
+							backC = "#000000";
+						} else {
+							$("#todo-other-title").fadeOut(100);
+							backC = "#" + data.classes[data.classes.findIndex(findCourseByCode($("#todo-class").val()))].color;
+						}
 						$("html").css({
 							"background": backC
 						});
 					});
-					let backC = "#" + data.classes[data.classes.findIndex(findCourseByCode($("#todo-class").val()))].color;
+					if ($("#todo-class").val() === "other") {
+						backC = "#000000";
+					} else {
+						backC = "#" + data.classes[data.classes.findIndex(findCourseByCode($("#todo-class").val()))].color;
+					}
 					$("html").css({
 						"background": backC
 					});
+					$("#todo-other-title").css({
+						"display": "none"
+					})
 				});
 
 				document.getElementById("addtodo-cancel-btn").addEventListener("click", (e) => {
@@ -172,17 +199,22 @@
 							data = JSON.parse(data);
 							let d = new Date($("#todo-date").val() + " " + $("#todo-time").val());
 							let now = new Date();
-							let newTodoObject = {
-								"id": saltAndHash($("#todo-name").val()),
-								"name": $("#todo-name").val(),
-								"code": $("#todo-class").val(),
-								"date": d.getTime(),
-								"timeCreated": now.getTime()
-							};
-							data.push(newTodoObject);
-							fs.writeFile("todo_list.json", JSON.stringify(data), (err) => {
-								remote.getCurrentWindow().close();
-							});
+							if (d.getTime() < now.getTime()) {
+								$(".error").html("Cannot have to-do in the past.");
+							} else {
+								let newTodoObject = {
+									"id": saltAndHash($("#todo-name").val()),
+									"name": $("#todo-name").val(),
+									"code": $("#todo-class").val(),
+									"title": ($("#todo-other-title").val() != "" ? $("#todo-other-title").val() : ""),
+									"date": d.getTime(),
+									"timeCreated": now.getTime()
+								};
+								data.push(newTodoObject);
+								fs.writeFile("todo_list.json", JSON.stringify(data), (err) => {
+									remote.getCurrentWindow().close();
+								});
+							}
 						});
 					} else {
 						$(".error").html("Please fill out all fields.");

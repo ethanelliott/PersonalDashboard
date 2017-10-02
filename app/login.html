@@ -1,0 +1,358 @@
+<html>
+
+<head>
+	<script>
+		if (typeof module === 'object') {
+			window.module = module;
+			module = undefined;
+		}
+	</script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="http://use.fontawesome.com/44027b3b13.js"></script>
+	<script>
+		if (window.module) module = window.module;
+	</script>
+	<link href="https://fonts.googleapis.com/css?family=Roboto:400,100,300,500,700,900,400italic,700italic,300italic" rel="stylesheet" type="text/css" media="screen">
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			--main-c: rgba(50, 50, 50, 1);
+		}
+
+		html {
+			background: rgba(0, 0, 0, 1);
+			-webkit-app-region: drag;
+			color: white;
+			font-family: 'Roboto', sans-serif;
+			font-size: 14px;
+		}
+
+		input {
+			cursor: text;
+		}
+
+		input,
+		select {
+			-webkit-user-select: none;
+			user-select: none;
+			-webkit-app-region: no-drag;
+			width: 100%;
+			font-size: 2em;
+			outline: none;
+			border: none;
+			margin-top: 1em;
+			padding: 0.4em;
+			color: white;
+			background: rgba(83, 82, 82, 1);
+		}
+
+		button {
+			-webkit-user-select: none;
+			user-select: none;
+			cursor: default;
+			-webkit-app-region: no-drag;
+			width: 100%;
+			font-size: 2em;
+			outline: none;
+			border: none;
+			margin-top: 1em;
+			background: var(--main-c);
+			padding: 0.4em;
+			color: white;
+		}
+
+		button:hover {
+			cursor: pointer;
+			background: rgba(33, 32, 32, 1)
+		}
+
+		body {
+			width: 100%;
+			height: 100%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
+		.content-wrapper {
+			width: 90%;
+		}
+
+		.title {
+			font-size: 3em;
+			text-align: center;
+			margin-bottom: 0.5em;
+		}
+
+		.error {
+			color: red;
+			-webkit-text-stroke: 1px white;
+			text-align: center;
+			font-size: 2em;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="content-wrapper">
+		<div class="title">
+			Login
+		</div>
+		<div class="error">
+
+		</div>
+		<input type="text" id="login-mycampid-txt" placeholder="Student ID" />
+		<input type="password" id="login-mycamppass-txt" placeholder="MyCampus Password" />
+		<button id="mycampus-login-btn">Login</button>
+	</div>
+	<script>
+		(function() {
+
+			const remote = require('electron').remote;
+			const dialog = remote.dialog;
+			const fs = require('fs');
+			const path = require('path')
+			const url = require('url');
+			const request = require('request-ssl');
+			const cheerio = require('cheerio');
+			const crypto = require('crypto');
+
+			function init() {
+				document.getElementById("mycampus-login-btn").addEventListener("click", (e) => {
+					let cal;
+					let username = $("#login-mycampid-txt").val();
+					let password = $("#login-mycamppass-txt").val();
+					const payload = {
+						'user': username,
+						'pass': password,
+						'uuid': '0xACA021'
+					};
+					let dd = new Date();
+					let cM = dd.getMonth() + 1;
+					let termDate = "";
+					if (cM > 0 && cM < 9) {
+						termDate = dd.getFullYear() + "01";
+					} else if (cM > 8 && cM < 13) {
+						termDate = dd.getFullYear() + "09";
+					}
+					let detailLoad = {
+						'term_in': termDate
+					};
+					let sess = request.jar();
+					const loginURL = "http://portal.mycampus.ca/cp/home/login";
+					const baseURL = "http://portal.mycampus.ca/cp/ip/login?sys=sct&url=";
+					const detailURL = "http://ssbp.mycampus.ca/prod_uoit/bwskfshd.P_CrseSchdDetl";
+					const nameURL = "http://ssbp.mycampus.ca/prod_uoit/bwskoacc.P_ViewAcctTotal"
+					request.post({
+						url: loginURL,
+						form: payload,
+						jar: sess
+					}, function(err_0, res_0, body_0) {
+						if (!body_0.includes("<title>Error: Failed Login</title>")) {
+							request.get({
+								url: (baseURL + nameURL),
+								jar: sess
+							}, function(err_01, res_01, body_01) {
+								let na = cheerio.load(body_01);
+								let nameContentArray = [];
+								na('p.whitespace1').each(function() {
+									nameContentArray.push(this);
+								});
+								nameContentArray = nameContentArray[0];
+								let name = nameContentArray.children[0].data.replace('\n', '').split(' ')[0];
+								let cont = fs.readFileSync("content.json", 'utf8');
+								cont = JSON.parse(cont);
+								cont.userName = name;
+								fs.writeFileSync("content.json", JSON.stringify(cont));
+							});
+							request.get({
+								url: (baseURL + detailURL),
+								jar: sess
+							}, function(err_1, res_1, body_1) {
+								request.post({
+									url: detailURL,
+									form: detailLoad,
+									jar: sess
+								}, function(err_2, res_2, body_2) {
+									let ch = cheerio.load(body_2);
+									let classes = [];
+									ch('acronym').each(function() {
+										classes.push(this);
+									});
+									let CRNS = [];
+									for (let h = 0; h < classes.length; h++) {
+										let timeTable = classes[h].parent.parent.parent.parent.next.next.children[2].children;
+										//console.log(timeTable);
+										let timeTableObject = [];
+										for (let k = 1; k < timeTable.length; k++) {
+											stringArray = ch(timeTable[k]).text().split('\n');
+											if (stringArray[1] != '') {
+												classTimeString = stringArray[2].split(' - ');
+												let location = stringArray[4].split(' ')[stringArray[4].split(' ').length - 1];
+												if (!isNaN(location[0]) && stringArray[4].split(' ')[0] === "Software") {
+													location = "SIRC" + stringArray[4].split(' ')[stringArray[4].split(' ').length - 1];
+												}
+												let classTimeObject = {
+													week: stringArray[1],
+													startTime: classTimeString[0],
+													endTime: classTimeString[1],
+													day: stringArray[3],
+													place: location,
+													dateRange: stringArray[5],
+													type: stringArray[6],
+													instructor: stringArray[7]
+												};
+												timeTableObject.push(classTimeObject);
+											}
+										}
+										let fullClassName = ch(classes[h].parent.parent.parent.parent.children[0]).text().split(' - ');
+										let classInfo = {
+											crn: ch(classes[h].parent.next.next).text(),
+											name: fullClassName[0],
+											code: (fullClassName[1].split(" ")[0] + fullClassName[1].split(" ")[1]).slice(0, -1),
+											section: fullClassName[2],
+											times: timeTableObject,
+											type: timeTableObject[0].type
+										};
+										CRNS.push(classInfo);
+									}
+									//We have the classes now!
+									let raw_classFilePath = "raw_class.json";
+									fs.writeFile(raw_classFilePath, JSON.stringify(CRNS), {
+										flags: 'w'
+									}, (err) => {
+										if (err) {
+											throw err;
+										}
+									});
+
+									//Generate Calendar JSON
+									const weekdayReference = {
+										"M": 1,
+										"T": 2,
+										"W": 3,
+										"R": 4,
+										"F": 5
+									};
+									let calArr = [];
+									let eventInfo = {};
+									for (let i = 0; i < CRNS.length; i++) {
+										for (let j = 0; j < CRNS[i].times.length; j++) {
+											let dateRange = CRNS[i].times[j].dateRange.split(" - ");
+											let startTimeDateObject;
+											let endTimeDateObject;
+											if (dateRange[0] === dateRange[1]) {
+												startTimeDateObject = new Date(dateRange[0] + " " + CRNS[i].times[j].startTime);
+												endTimeDateObject = new Date(dateRange[0] + " " + CRNS[i].times[j].endTime);
+												eventInfo = {
+													"code": CRNS[i].code,
+													"crn": CRNS[i].crn,
+													"name": CRNS[i].name,
+													"section": CRNS[i].section,
+													"startTime": startTimeDateObject.getTime(),
+													"endTime": endTimeDateObject.getTime(),
+													"place": CRNS[i].times[j].place,
+													"type": CRNS[i].times[j].type
+												};
+												calArr.push(eventInfo);
+											} else {
+												var dateRangeWeeks = Math.floor((new Date(dateRange[1]).getTime() - new Date(dateRange[0]).getTime()) / (1000 * 60 * 60 * 24 * 7));
+												let start = new Date(dateRange[0]);
+												let end = new Date(dateRange[1]);
+												let delta = (start.getDay() - weekdayReference[CRNS[i].times[j].day]);
+												if (!isNaN(delta)) {
+													if (delta > 0) {
+														start.setTime(start.getTime() + ((7 - delta) * 1000 * 60 * 60 * 24));
+													} else {
+														start.setTime(start.getTime() + ((-1 * delta) * 1000 * 60 * 60 * 24));
+													}
+												}
+												for (let g = 0; g <= dateRangeWeeks; g++) {
+													let classDateThing = new Date();
+													classDateThing.setTime(start.getTime() + ((7) * 1000 * 60 * 60 * 24 * g));
+													if (classDateThing.getTime() > (new Date("11/05/17").getTime())) {
+														classDateThing.setTime(start.getTime() + (1 * 1000 * 60 * 60 * 24) + ((7) * 1000 * 60 * 60 * 24 * g));
+													}
+													startTimeDateObject = new Date(classDateThing.toLocaleDateString() + " " + CRNS[i].times[j].startTime);
+													endTimeDateObject = new Date(classDateThing.toLocaleDateString() + " " + CRNS[i].times[j].endTime);
+													eventInfo = {
+														"code": CRNS[i].code,
+														"crn": CRNS[i].crn,
+														"name": CRNS[i].name,
+														"section": CRNS[i].section,
+														"startTime": startTimeDateObject.getTime(),
+														"endTime": endTimeDateObject.getTime(),
+														"place": CRNS[i].times[j].place,
+														"type": CRNS[i].times[j].type
+													};
+													calArr.push(eventInfo);
+												}
+											}
+
+										}
+									}
+
+									let calendarFilePath = "calendar.json";
+									calArr.sort((a, b) => {
+										return a.startTime - b.startTime;
+									});
+									fs.writeFileSync(calendarFilePath, JSON.stringify(calArr));
+									let filePath = "content.json";
+									fs.readFile(filePath, 'utf8', (err, data) => {
+										data = JSON.parse(data);
+										let classData = [];
+										let courseCodeList = [];
+										for (let i = 0; i < CRNS.length; i++) {
+											if (courseCodeList.indexOf(CRNS[i].code) < 0) {
+												courseCodeList.push(CRNS[i].code);
+												let ClassObject = {
+													"name": CRNS[i].code,
+													"title": CRNS[i].name,
+													"icon": "book",
+													"color": "",
+													"lecture": CRNS.find(findCourseType("Lecture", CRNS[i].code)),
+													"lab": CRNS.find(findCourseType("Laboratory", CRNS[i].code)),
+													"tutorial": CRNS.find(findCourseType("Tutorial", CRNS[i].code))
+												};
+												classData.push(ClassObject);
+											}
+										}
+										data.classes = classData;
+										let fileContent = JSON.stringify(data);
+										fs.writeFile(filePath, fileContent, (err) => {
+											if (err) {
+												throw err;
+											}
+											remote.getCurrentWindow().close();
+										});
+									});
+								});
+							});
+						} else {
+							console.log("Login Error");
+							$("#settings-mycamploginerror").html("Error<br /> Check Login Details<br />");
+						}
+					});
+				});
+			};
+
+			function findCourseType(courseType, courseID) {
+				return function(element) {
+					return element.type === courseType && element.code === courseID;
+				}
+			}
+
+			document.onreadystatechange = function() {
+				if (document.readyState == "complete") {
+					//const win = remote.getCurrentWindow();
+					//win.webContents.openDevTools();
+					init();
+				}
+			};
+
+		})();
+	</script>
+</body>
+
+</html>

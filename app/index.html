@@ -197,7 +197,7 @@
 								}
 								let toDoArr = [];
 								for (let i = 0; i < list_todo.length; i++) {
-									let co = data.classes[data.classes.findIndex(findCourse(list_todo[i].code))].color;
+									let co = (list_todo[i].code === "other" ? "000000" : data.classes[data.classes.findIndex(findCourse(list_todo[i].code))].color);
 									let todoID = list_todo[i];
 									toDoArr.push(todoID);
 									let dtodo = new Date(list_todo[i].date);
@@ -205,11 +205,11 @@
 										"<div class='row-wrapper'>" +
 										"<div class='to-do-content-wrapper'>" +
 										"<p class='todo-name'>" + list_todo[i].name + "</p>" +
-										"<p class='todo-code'>" + list_todo[i].code + "</p>" +
+										"<p class='todo-code'>" + ((list_todo[i].code === "other") ? list_todo[i].title : data.classes[data.classes.findIndex(findCourse(list_todo[i].code))].title) + "</p>" +
 										"<p class='todo-date'>" + dtodo.toLocaleString() + "</p>" +
 										"<div class='countd' id='" + list_todo[i].id + "'><span id='" + list_todo[i].id + "-text'></span></div>" +
 										"</div>" +
-										"<div class='to-do-icon-wrapper'><i class='fa fa-exclamation-triangle' aria-hidden='true'></i></div>" +
+										"<div class='to-do-icon-wrapper'><i class='fa' aria-hidden='true'></i></div>" +
 										"</div>" +
 										"<div id='" + list_todo[i].id + "' class='todo-progress'><div id='" + list_todo[i].id + "' class='todo-progress-bar'></div></div>" +
 										"</div>";
@@ -280,21 +280,42 @@
 				let _now = new Date();
 				let _done = new Date(_x.date);
 				let _start = new Date(_x.timeCreated);
-				let perComplete = 100 - (Math.floor(((_now.getTime() - _start.getTime()) / (_done.getTime() - _start.getTime())) * 1000) / 10);
+				let perComplete = 100 - (Math.floor(((_now.getTime() - _start.getTime()) / ((_done.getTime() - _start.getTime() < 1 ? 1 : _done.getTime() - _start.getTime()))) * 1000) / 10);
 				let str_perComplete = perComplete + "%";
 				let str_roundPerComplete = Math.floor(perComplete) + "%";
 				$("#" + _x.id + ".todo-progress-bar").css({
 					"width": str_perComplete
 				});
-				//$("#" + _x.id + ".todo-progress-bar").html(str_roundPerComplete);
 				if (perComplete <= 0) {
 					perComplete = 0;
 					clearInterval(interval);
+					$("#" + _x.id + ">.row-wrapper>.to-do-icon-wrapper>i").className = '';
+					$("#" + _x.id + ">.row-wrapper>.to-do-icon-wrapper>i").addClass('fa');
+					$("#" + _x.id + ">.row-wrapper>.to-do-icon-wrapper>i").addClass('fa-exclamation-triangle');
+					$("#" + _x.id + ">.row-wrapper>.to-do-icon-wrapper").css({
+						"animation-name": "fadeinout",
+						"animation-duration": "0.5s",
+						"animation-direction": "alternate",
+						"animation-iteration-count": "infinite",
+						"animation-timing-function": "linear"
+					});
+					/*
+					$("#" + _x.id + ">.row-wrapper>.to-do-icon-wrapper").css({
+						"opacity": "1"
+					});
+					*/
+				} else if (perComplete <= 10) {
+					$("#" + _x.id + ">.row-wrapper>.to-do-icon-wrapper>i").className = '';
+					$("#" + _x.id + ">.row-wrapper>.to-do-icon-wrapper>i").addClass('fa');
+					$("#" + _x.id + ">.row-wrapper>.to-do-icon-wrapper>i").addClass('fa-clock-o');
+					$("#" + _x.id + ">.row-wrapper>.to-do-icon-wrapper").css({
+						"animation-name": "fadeinout",
+						"animation-duration": "0.5s",
+						"animation-direction": "alternate",
+						"animation-iteration-count": "infinite",
+						"animation-timing-function": "linear"
+					});
 				}
-				if (perComplete <= 10) {
-
-				}
-				//console.log((((10 - perComplete) / 10) * 0.1));
 			}, 500);
 		}
 
@@ -361,10 +382,10 @@
 					parent: remote.getCurrentWindow(),
 					modal: true,
 					width: 400,
-					height: 600,
-					minHeight: 600,
+					height: 650,
+					minHeight: 650,
 					minWidth: 400,
-					maxHeight: 600,
+					maxHeight: 650,
 					maxWidth: 400,
 					frame: false
 				});
@@ -510,12 +531,10 @@
 								nameContentArray.push(this);
 							});
 							nameContentArray = nameContentArray[0];
-							console.log(nameContentArray);
 							let name = nameContentArray.children[0].data.replace('\n', '').split(' ')[0];
 							let cont = fs.readFileSync("content.json", 'utf8');
 							cont = JSON.parse(cont);
 							cont.userName = name;
-							console.log(name);
 							fs.writeFileSync("content.json", JSON.stringify(cont));
 						});
 						request.get({
@@ -692,12 +711,40 @@
 		}
 
 		function init() {
-			let writeContent = '{"userName":"","pages": [{"title": "Overview"}, {"title": "Calendar"}, {"title": "Settings"}],"classes": []}';
 			fs.stat("content.json", (err, stat) => {
 				if (err && err.code == 'ENOENT') {
+					let writeContent = '{"userName":"","pages": [{"title": "Overview"}, {"title": "Calendar"}, {"title": "Settings"}],"classes": []}';
 					fs.writeFileSync('content.json', writeContent);
 					fs.writeFileSync('calendar.json', "[]");
 					fs.writeFileSync('todo_list.json', "[]");
+					const BrowserWindow = remote.BrowserWindow;
+					var win = new BrowserWindow({
+						parent: remote.getCurrentWindow(),
+						modal: true,
+						width: 400,
+						height: 400,
+						minHeight: 400,
+						minWidth: 400,
+						maxHeight: 400,
+						maxWidth: 400,
+						frame: false
+					});
+					win.on('close', () => {
+						remote.getCurrentWindow().show();
+						remote.getCurrentWindow().focus();
+						loadSideBar(() => {});
+						loadPageContent(0);
+					});
+					win.setMenu(null);
+					win.loadURL(url.format({
+						pathname: path.join(__dirname, '/login.html'),
+						protocol: 'file:',
+						slashes: true
+					}));
+					win.once('ready-to-show', () => {
+						win.show();
+						win.focus();
+					});
 				}
 
 				loadSideBar(() => {
