@@ -414,6 +414,7 @@
 		function loadSideBar(callback) {
 			let filePath = "content.json";
 			jqMenuList = [];
+			menuListContent = [];
 			$(".left-pannel").html("");
 			fs.readFile(filePath, 'utf8', (err, data) => {
 				data = JSON.parse(data);
@@ -509,10 +510,12 @@
 								nameContentArray.push(this);
 							});
 							nameContentArray = nameContentArray[0];
+							console.log(nameContentArray);
 							let name = nameContentArray.children[0].data.replace('\n', '').split(' ')[0];
 							let cont = fs.readFileSync("content.json", 'utf8');
 							cont = JSON.parse(cont);
 							cont.userName = name;
+							console.log(name);
 							fs.writeFileSync("content.json", JSON.stringify(cont));
 						});
 						request.get({
