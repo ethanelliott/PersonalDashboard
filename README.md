@@ -16,9 +16,19 @@ Just login with your UOIT MyCampus credentials, and let the application get all 
 
 ## Latest Stable Build
 
-version|release date|platform|download
----|---|---|---
-v1.2.9|02/10/17|windows|()[]
+<table>
+  <tr>
+    <th>Version</th>
+    <th>Release Date</th>
+    <th colspan="3">Download</th>
+  </tr>
+  <tr>
+    <td>v1.2.9</td>
+    <td>02/10/17</td>
+    <td><a href="https://github.com/ethanelliott/PersonalDashboard/releases/download/v1.2.9/UOITPD.Setup.1.2.9.exe">windows</a></td>
+    <td><a href="https://github.com/ethanelliott/PersonalDashboard/releases/download/v1.2.9/UOITPD.Setup.1.2.9.exe">Linux</a></td>
+  </tr>
+</table>
 
 
 ## Build
