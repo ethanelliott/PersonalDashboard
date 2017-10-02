@@ -131,7 +131,7 @@
 								out += "<div class='column' style='width:100%;padding:1em;'><div class='column-content'>";
 								out += "<h1>Today's Classes:</h1>";
 								let isTomorrowClass = false;
-								let countDownsArr = [];
+								var countDownsArr = [];
 								for (let i = 0; i < cal.length; i++) {
 									let now = new Date();
 									let classT = new Date(cal[i].startTime);
@@ -188,14 +188,14 @@
 								out += "</div></div>";
 								out += "<div class='column'  style='width:100%;padding:1em;'><div class='column-content'>";
 								out += "<div class='row-wrapper' style='justify-content:space-between;align-items:center;'><h1>To-Do</h1><button id='overview-addtodo-btn' style='width:2em;height:2em;' class='button'>+</button></div>";
-								let list_todo = fs.readFileSync("todo_list.json");
+								var list_todo = fs.readFileSync("todo_list.json");
 								if (list_todo != "") {
 									list_todo = JSON.parse(list_todo);
 									list_todo.sort(sortTodoList);
 								} else {
 									list_todo = [];
 								}
-								let toDoArr = [];
+								var toDoArr = [];
 								for (let i = 0; i < list_todo.length; i++) {
 									let co = (list_todo[i].code === "other" ? "000000" : data.classes[data.classes.findIndex(findCourse(list_todo[i].code))].color);
 									let todoID = list_todo[i];
@@ -253,8 +253,12 @@
 								OverviewPageLoadEventRegister();
 								break;
 							default:
+								var countDownsArr = [];
 								out += "<div class='title'>" + jsonContent.title + "</div>";
 								out += "<input id='course-colourselect' type='color' style='width:5em;height:5em;border-radius:100%;' />";
+								out += "<div class='row-wrapper'>";
+								out += "<div class='column' style='width:100%;padding:1em;'>" +
+									"<div class='column-content'>";
 								if (jsonContent.lecture) {
 									out += "<h1>Lecture - " + jsonContent.lecture.crn + " - " + jsonContent.lecture.times[0].place + "</h1>";
 								}
@@ -266,13 +270,91 @@
 									out += "<div class='line-break'></div>";
 									out += "<h1>Lab - " + jsonContent.lab.crn + " - " + jsonContent.lab.times[0].place + "</h1>";
 								}
+								out += "</div>";
+								out += "</div>";
+								out += "<div class='column' style='width:100%;padding:1em;'>" +
+									"<div class='column-content'>";
+								var list_todo = fs.readFileSync("todo_list.json");
+								if (list_todo != "") {
+									list_todo = JSON.parse(list_todo);
+									list_todo.sort(sortTodoList);
+								} else {
+									list_todo = [];
+								}
+								let courseSpecificTodo = [];
+								for (let i = 0; i < list_todo.length; i++) {
+									if (list_todo[i].code === jsonContent.name) {
+										courseSpecificTodo.push(list_todo[i]);
+									}
+								}
+								list_todo = courseSpecificTodo;
+								var toDoArr = [];
+								for (let i = 0; i < list_todo.length; i++) {
+									let co = (list_todo[i].code === "other" ? "000000" : data.classes[data.classes.findIndex(findCourse(list_todo[i].code))].color);
+									let todoID = list_todo[i];
+									toDoArr.push(todoID);
+									let dtodo = new Date(list_todo[i].date);
+									out += "<div id=" + list_todo[i].id + " class='todo' style='border-left: 10px solid #" + co + ";background: #" + colorFade(co, 180) + "'>" +
+										"<div class='row-wrapper'>" +
+										"<div class='to-do-content-wrapper'>" +
+										"<p class='todo-name'>" + list_todo[i].name + "</p>" +
+										"<p class='todo-code'>" + ((list_todo[i].code === "other") ? list_todo[i].title : data.classes[data.classes.findIndex(findCourse(list_todo[i].code))].title) + "</p>" +
+										"<p class='todo-date'>" + dtodo.toLocaleString() + "</p>" +
+										"<div class='countd' id='" + list_todo[i].id + "'><span id='" + list_todo[i].id + "-text'></span></div>" +
+										"</div>" +
+										"<div class='to-do-icon-wrapper'><i class='fa' aria-hidden='true'></i></div>" +
+										"</div>" +
+										"<div id='" + list_todo[i].id + "' class='todo-progress'><div id='" + list_todo[i].id + "' class='todo-progress-bar'></div></div>" +
+										"</div>";
+									countDownsArr.push({
+										"container": list_todo[i].id,
+										"text": list_todo[i].id + '-text',
+										"time": list_todo[i].date
+									});
+								}
+								out += "</div>";
+								out += "</div>";
 								$("#pannel-content-wrapper").html(out);
+								for (let i = 0; i < countDownsArr.length; i++) {
+									let tObj = new Date(countDownsArr[i].time);
+									let countStr = tObj.getFullYear() + "/" + (tObj.getMonth() + 1) + "/" + tObj.getDate() + " " + tObj.getHours() + ":" + tObj.getMinutes();
+									$("#" + countDownsArr[i].container + ".countd").countdown(countStr, (event) => {
+										if (parseInt(event.strftime('%D')) > 0) {
+											$("#" + countDownsArr[i].text).html(event.strftime('in %D day' + (parseInt(event.strftime('%D')) > 1 ? 's' : '') + ', %H hr' + (parseInt(event.strftime('%H')) > 1 ? 's' : '') + ', %M min' + (parseInt(event.strftime('%M')) > 1 ? 's' :
+												'')));
+										} else if (parseInt(event.strftime('%H')) > 0) {
+											$("#" + countDownsArr[i].text).html(event.strftime('in %H hr' + (parseInt(event.strftime('%H')) > 1 ? 's' : '') + ', %M min' + (parseInt(event.strftime('%M')) > 1 ? 's' : '')));
+										} else {
+											$("#" + countDownsArr[i].text).html(event.strftime('in %M min' + (parseInt(event.strftime('%M')) > 1 ? 's' : '')));
+										}
+									});
+								}
+								for (let i = 0; i < toDoArr.length; i++) {
+									moveProgressBar(toDoArr[i]);
+									$("#" + toDoArr[i].id + ".todo").click(() => {
+										$("#" + toDoArr[i].id + ".todo").fadeOut();
+										setTimeout(() => {
+											$("#" + toDoArr[i].id + ".todo").remove();
+											fs.readFile("todo_list.json", (err, ToDodata) => {
+												ToDodata = JSON.parse(ToDodata);
+												ToDodata.splice(ToDodata.findIndex(findTodoID(toDoArr[i].id)), 1);
+												fs.writeFile("todo_list.json", JSON.stringify(ToDodata), (err) => {});
+											});
+										}, 1500);
+									});
+								}
 								CoursePageLoadEventRegister(jsonContent.name);
 								break;
 						}
 					});
 				});
 			}
+		}
+
+		function findCourseInTODO(courseid) {
+			return (element) => {
+				return element.code && element.code === courseid;
+			};
 		}
 
 		function moveProgressBar(_x) {
@@ -439,7 +521,6 @@
 			$(".left-pannel").html("");
 			fs.readFile(filePath, 'utf8', (err, data) => {
 				data = JSON.parse(data);
-				console.log(data.userName);
 				$(".window-title").text((data.userName && data.userName != "" ? data.userName + "'s Personal Dashboard" : "Personal Dashboard"));
 				let classes = data.classes;
 				let pages = data.pages;
@@ -554,7 +635,6 @@
 								let CRNS = [];
 								for (let h = 0; h < classes.length; h++) {
 									let timeTable = classes[h].parent.parent.parent.parent.next.next.children[2].children;
-									//console.log(timeTable);
 									let timeTableObject = [];
 									for (let k = 1; k < timeTable.length; k++) {
 										stringArray = ch(timeTable[k]).text().split('\n');
