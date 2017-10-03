@@ -71,6 +71,12 @@ button.button {
     padding: 0.5em;
     outline: none;
     border: none;
+    transition: all 0.2s;
+}
+
+button.button:hover {
+    cursor: pointer;
+    opacity: 0.8;
 }
 
 .titlebar {
