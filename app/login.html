@@ -118,9 +118,14 @@
 			const cheerio = require('cheerio');
 			const crypto = require('crypto');
 
-			const APDD = "../../../../../../../../../../UOITPD_DATA/";
+			var APDD = "";
+
+			function pt(_pa) {
+				return path.join(APDD, _pa);
+			}
 
 			function init() {
+				APDD = path.resolve("~", "UOITPD_DATA/");
 				document.getElementById("mycampus-login-btn").addEventListener("click", (e) => {
 					let cal;
 					let username = $("#login-mycampid-txt").val();
@@ -163,10 +168,10 @@
 								});
 								nameContentArray = nameContentArray[0];
 								let name = nameContentArray.children[0].data.replace('\n', '').split(' ')[0];
-								let cont = fs.readFileSync(APDD + "content.json", 'utf8');
+								let cont = fs.readFileSync(pt("content.json"), 'utf8');
 								cont = JSON.parse(cont);
 								cont.userName = name;
-								fs.writeFileSync(APDD + "content.json", JSON.stringify(cont));
+								fs.writeFileSync(pt("content.json"), JSON.stringify(cont));
 							});
 							request.get({
 								url: (baseURL + detailURL),
@@ -221,7 +226,7 @@
 									}
 									//We have the classes now!
 									let raw_classFilePath = "raw_class.json";
-									fs.writeFile(APDD + raw_classFilePath, JSON.stringify(CRNS), {
+									fs.writeFile(pt(raw_classFilePath), JSON.stringify(CRNS), {
 										flags: 'w'
 									}, (err) => {
 										if (err) {
@@ -299,9 +304,9 @@
 									calArr.sort((a, b) => {
 										return a.startTime - b.startTime;
 									});
-									fs.writeFileSync(APDD + calendarFilePath, JSON.stringify(calArr));
+									fs.writeFileSync(pt(calendarFilePath), JSON.stringify(calArr));
 									let filePath = "content.json";
-									fs.readFile(APDD + filePath, 'utf8', (err, data) => {
+									fs.readFile(pt(filePath), 'utf8', (err, data) => {
 										data = JSON.parse(data);
 										let classData = [];
 										let courseCodeList = [];
@@ -322,7 +327,7 @@
 										}
 										data.classes = classData;
 										let fileContent = JSON.stringify(data);
-										fs.writeFile(APDD + filePath, fileContent, (err) => {
+										fs.writeFile(pt(filePath), fileContent, (err) => {
 											if (err) {
 												throw err;
 											}
@@ -347,12 +352,11 @@
 
 			document.onreadystatechange = function() {
 				if (document.readyState == "complete") {
-					//const win = remote.getCurrentWindow();
-					//win.webContents.openDevTools();
+					const win = remote.getCurrentWindow();
+					win.webContents.openDevTools();
 					init();
 				}
 			};
-
 		})();
 	</script>
 </body>

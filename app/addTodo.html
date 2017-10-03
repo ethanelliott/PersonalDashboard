@@ -140,10 +140,16 @@
 				};
 			}
 
-			function init() {
-				let fullToggle = false;
+			var APDD = "";
 
-				fs.readFile("content.json", (err, data) => {
+			function pt(_pa) {
+				return path.join(APDD, _pa);
+			}
+
+			function init() {
+				APDD = path.resolve("~", "UOITPD_DATA/");
+
+				fs.readFile(pt("content.json"), (err, data) => {
 					data = JSON.parse(data);
 					let out = "";
 					for (let i = 0; i < data.classes.length; i++) {
@@ -195,7 +201,7 @@
 
 				document.getElementById("addtodo-add-btn").addEventListener("click", (e) => {
 					if ($("#todo-name").val() && $("#todo-class").val() && $("#todo-date").val() && $("#todo-time").val()) {
-						fs.readFile("todo_list.json", (err, data) => {
+						fs.readFile(pt("todo_list.json"), (err, data) => {
 							data = JSON.parse(data);
 							let d = new Date($("#todo-date").val() + " " + $("#todo-time").val());
 							let now = new Date();
@@ -211,7 +217,7 @@
 									"timeCreated": now.getTime()
 								};
 								data.push(newTodoObject);
-								fs.writeFile("todo_list.json", JSON.stringify(data), (err) => {
+								fs.writeFile(pt("todo_list.json"), JSON.stringify(data), (err) => {
 									remote.getCurrentWindow().close();
 								});
 							}
