@@ -23,10 +23,14 @@ Just login with your UOIT MyCampus credentials, and let the application get all 
     <th colspan="3">Download</th>
   </tr>
   <tr>
+    <td>v1.3.0</td>
+    <td>02/10/17</td>
+    <td><a href="https://github.com/ethanelliott/PersonalDashboard/releases/download/v1.3.0/UOITPD.Setup.1.3.0.exe">windows</a></td>
+  </tr>
+  <tr>
     <td>v1.2.9</td>
     <td>02/10/17</td>
     <td><a href="https://github.com/ethanelliott/PersonalDashboard/releases/download/v1.2.9/UOITPD.Setup.1.2.9.exe">windows</a></td>
-    <td><a href="https://github.com/ethanelliott/PersonalDashboard/releases/download/v1.2.9/UOITPD.Setup.1.2.9.exe">Linux</a></td>
   </tr>
 </table>
 
