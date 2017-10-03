@@ -24,7 +24,7 @@ Just login with your UOIT MyCampus credentials, and let the application get all 
   </tr>
   <tr>
     <td>v1.3.0</td>
-    <td>02/10/17</td>
+    <td>03/10/17</td>
     <td><a href="https://github.com/ethanelliott/PersonalDashboard/releases/download/v1.3.0/UOITPD.Setup.1.3.0.exe">windows</a></td>
   </tr>
   <tr>
