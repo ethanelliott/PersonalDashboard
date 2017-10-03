@@ -118,6 +118,8 @@
 			const cheerio = require('cheerio');
 			const crypto = require('crypto');
 
+			const APDD = "../../../../../../../../../../UOITPD_DATA/";
+
 			function init() {
 				document.getElementById("mycampus-login-btn").addEventListener("click", (e) => {
 					let cal;
@@ -161,10 +163,10 @@
 								});
 								nameContentArray = nameContentArray[0];
 								let name = nameContentArray.children[0].data.replace('\n', '').split(' ')[0];
-								let cont = fs.readFileSync("content.json", 'utf8');
+								let cont = fs.readFileSync(APDD + "content.json", 'utf8');
 								cont = JSON.parse(cont);
 								cont.userName = name;
-								fs.writeFileSync("content.json", JSON.stringify(cont));
+								fs.writeFileSync(APDD + "content.json", JSON.stringify(cont));
 							});
 							request.get({
 								url: (baseURL + detailURL),
@@ -219,7 +221,7 @@
 									}
 									//We have the classes now!
 									let raw_classFilePath = "raw_class.json";
-									fs.writeFile(raw_classFilePath, JSON.stringify(CRNS), {
+									fs.writeFile(APDD + raw_classFilePath, JSON.stringify(CRNS), {
 										flags: 'w'
 									}, (err) => {
 										if (err) {
@@ -297,9 +299,9 @@
 									calArr.sort((a, b) => {
 										return a.startTime - b.startTime;
 									});
-									fs.writeFileSync(calendarFilePath, JSON.stringify(calArr));
+									fs.writeFileSync(APDD + calendarFilePath, JSON.stringify(calArr));
 									let filePath = "content.json";
-									fs.readFile(filePath, 'utf8', (err, data) => {
+									fs.readFile(APDD + filePath, 'utf8', (err, data) => {
 										data = JSON.parse(data);
 										let classData = [];
 										let courseCodeList = [];
@@ -320,7 +322,7 @@
 										}
 										data.classes = classData;
 										let fileContent = JSON.stringify(data);
-										fs.writeFile(filePath, fileContent, (err) => {
+										fs.writeFile(APDD + filePath, fileContent, (err) => {
 											if (err) {
 												throw err;
 											}
