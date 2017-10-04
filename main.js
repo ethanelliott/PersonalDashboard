@@ -6,6 +6,8 @@ const url = require('url')
 // be closed automatically when the JavaScript object is garbage collected.
 let win;
 
+global['APDD'] = path.join(app.getPath('home'), "UOITPD_DATA");
+
 const template = [
 	{
 		label:'Ethan'

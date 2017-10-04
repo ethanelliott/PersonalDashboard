@@ -49,7 +49,10 @@
 	</div>
 	<script>
 		const dev = true;
-		const remote = require('electron').remote;
+		const electron = require('electron');
+		const {
+			remote
+		} = electron;
 		const dialog = remote.dialog;
 		const fs = require('fs');
 		const path = require('path')
@@ -58,8 +61,6 @@
 		const cheerio = require('cheerio');
 		const crypto = require('crypto');
 		const mkdirp = require('mkdirp')
-
-		var APDD = "";
 
 		var jqMenuList = [];
 		var menuListContent = [];
@@ -618,14 +619,14 @@
 		}
 
 		function pt(_pa) {
-			return path.join(APDD, _pa);
+			return path.join(remote.getGlobal('APDD'), _pa);
 		}
 
 		function init() {
-			APDD = path.resolve("~", "UOITPD_DATA");
+			console.log(remote.getGlobal('APDD'));
 			fs.stat(pt("content.json"), (err, stat) => {
 				if (err && err.code == 'ENOENT') {
-					mkdirp.sync(APDD);
+					mkdirp.sync(remote.getGlobal('APDD'));
 					let writeContent = '{"userName":"","pages": [{"title": "Overview"}, {"title": "Calendar"}, {"title": "Settings"}],"classes": []}';
 					fs.writeFileSync(pt('content.json'), writeContent);
 					fs.writeFileSync(pt('calendar.json'), "[]");

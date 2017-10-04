@@ -129,9 +129,16 @@
 	<script>
 		(function() {
 
-			const remote = require('electron').remote;
+			const electron = require('electron');
+			const {
+				remote
+			} = electron;
 			const dialog = remote.dialog;
 			const fs = require('fs');
+			const path = require('path')
+			const url = require('url');
+			const request = require('request-ssl');
+			const cheerio = require('cheerio');
 			const crypto = require('crypto');
 
 			function findCourseByCode(code) {
@@ -140,15 +147,11 @@
 				};
 			}
 
-			var APDD = "";
-
 			function pt(_pa) {
-				return path.join(APDD, _pa);
+				return path.join(remote.getGlobal('APDD'), _pa);
 			}
 
 			function init() {
-				APDD = path.resolve("~", "UOITPD_DATA/");
-
 				fs.readFile(pt("content.json"), (err, data) => {
 					data = JSON.parse(data);
 					let out = "";

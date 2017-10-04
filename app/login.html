@@ -118,14 +118,11 @@
 			const cheerio = require('cheerio');
 			const crypto = require('crypto');
 
-			var APDD = "";
-
 			function pt(_pa) {
-				return path.join(APDD, _pa);
+				return path.join(remote.getGlobal('APDD'), _pa);
 			}
 
 			function init() {
-				APDD = path.resolve("~", "UOITPD_DATA/");
 				document.getElementById("mycampus-login-btn").addEventListener("click", (e) => {
 					let cal;
 					let username = $("#login-mycampid-txt").val();
@@ -352,8 +349,8 @@
 
 			document.onreadystatechange = function() {
 				if (document.readyState == "complete") {
-					const win = remote.getCurrentWindow();
-					win.webContents.openDevTools();
+					//const win = remote.getCurrentWindow();
+					//win.webContents.openDevTools();
 					init();
 				}
 			};
