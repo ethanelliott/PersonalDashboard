@@ -188,11 +188,18 @@
 										isTomorrowClass = true;
 										let co = data.classes[data.classes.findIndex(findCourse(cal[i].code))].color;
 										let classCountHash = saltAndHash(cal[i].crn);
+										let eventIcon = "book";
+										for (let o = 0; o < data.classes.length; o++) {
+											if (cal[i].code === data.classes[o].name) {
+												eventIcon = data.classes[o].icon;
+											}
+										}
 										eventArr.push({
 											"id": "#event-" + classCountHash,
 											"course": cal[i].code
 										});
 										out += "<div id='event-" + classCountHash + "' class='event " + (now.getTime() > classE.getTime() ? "strikeout" : "") + "' style='border-left: 7px solid #" + co + ";background:#" + colorFade(co, 180) + ";'>" +
+											"<div class='event-content-wrapper'>" +
 											"<p class='event-name'>" + cal[i].name + "</p>" +
 											"<p class='event-location'>" + cal[i].type + " - " + cal[i].place + "</p>" +
 											"<p class='event-time'>" + (new Date(cal[i].startTime)).toLocaleTimeString() + " - " + (new Date(cal[i].endTime)).toLocaleTimeString() + "</p>";
@@ -205,6 +212,10 @@
 												"descriptor": (now.getTime() > cal[i].startTime ? "ends " : "")
 											});
 										}
+										out += "</div>";
+										out += "<div class='event-icon-wrapper'>";
+										out += "<i style='font-size:3em;color:" + co + ";' class='fa fa-" + eventIcon + "'></i>";
+										out += "</div>";
 										out += "</div>";
 									}
 								}
