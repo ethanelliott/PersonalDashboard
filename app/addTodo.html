@@ -184,12 +184,22 @@
 						$("html").css({
 							"background": backC
 						});
+						let ccc = backC.split("#")[1];
+						let textC = ((parseInt(ccc.substring(0, 2), 16) * 0.299 + parseInt(ccc.substring(2, 4), 16) * 0.587 + parseInt(ccc.substring(4, 6), 16) * 0.114) > 186 ? "#000000" : "#FFFFFF")
+						$("body").css({
+							"color": textC
+						});
 					});
 					if ($("#todo-class").val() === "other") {
 						backC = "#000000";
 					} else {
 						backC = "#" + data.classes[data.classes.findIndex(findCourseByCode($("#todo-class").val()))].color;
 					}
+					let ccc = backC.split("#")[1];
+					let textC = ((parseInt(ccc.substring(0, 2), 16) * 0.299 + parseInt(ccc.substring(2, 4), 16) * 0.587 + parseInt(ccc.substring(4, 6), 16) * 0.114) > 186 ? "#000000" : "#FFFFFF")
+					$("body").css({
+						"color": textC
+					});
 					$("html").css({
 						"background": backC
 					});

@@ -12,10 +12,36 @@
     outline: 1px solid slategrey;
 }
 
+.sticky {
+    position: -webkit-sticky;
+    position: sticky;
+}
+
+.sticky.sticky-fixed.is-sticky {
+    position: fixed;
+    -webkit-backface-visibility: hidden;
+    -moz-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+.sticky.sticky-fixed.is-sticky:not([style*="margin-top"]) {
+    margin-top: 0 !important;
+}
+
+.sticky.sticky-fixed.is-sticky:not([style*="margin-bottom"]) {
+    margin-bottom: 0 !important;
+}
+
+.sticky.sticky-fixed.is-absolute {
+    position: absolute;
+}
+
 * {
     margin: 0;
     padding: 0;
     --main-c: rgba(42, 62, 195, 1);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 p {
@@ -328,16 +354,44 @@ h2 {
 
 .event {
     margin-bottom: 1em;
+    padding: 0.4em;
     padding-left: 0.5em;
     font-size: 2em;
     font-weight: normal;
+    color: black;
+    width: 95%;
+    transition: all 0.3s;
+    box-shadow: 0 0 15px 1px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: row;
+}
+
+.event-content-wrapper {
+    flex: 3;
+}
+
+.event-icon-wrapper {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.event:hover {
+    margin-left: 0.5em;
+}
+
+.event:hover * {
+    cursor: pointer;
 }
 
 .event.strikeout {
     text-decoration: line-through;
 }
 
-.event-name {}
+.event-name {
+    font-weight: 400;
+}
 
 .event-location {
     font-style: italic;
@@ -345,7 +399,7 @@ h2 {
 }
 
 .event-time {
-    font-weight: 100;
+    font-weight: 300;
 }
 
 .countd {
@@ -410,7 +464,7 @@ h2 {
     cursor: pointer;
 }
 
-.todo:hover>*>*>*>p {
+.todo:hover p {
     text-decoration: line-through;
 }
 

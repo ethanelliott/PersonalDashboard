@@ -18,6 +18,9 @@ function createWindow () {
   // Create the browser window.
   win = new BrowserWindow(
 	  {
+		  webPreferences: {
+		    experimentalFeatures: true
+		  },
 		  width: 1000,
 		  height: 700,
 		  minHeight:300,

@@ -4,7 +4,6 @@
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 	<link href="http://fonts.googleapis.com/css?family=Roboto:400,100,300,500,700,900,400italic,700italic,300italic" rel="stylesheet" type="text/css" media="screen">
 	<link href="http://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.5.1/fullcalendar.min.css" rel="stylesheet" type="text/css" media="screen" />
-	<link href="http://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.5.1/fullcalendar.print.css" rel="stylesheet" type="text/css" media="print" />
 	<link href="style.css" rel="stylesheet" type="text/css" media="screen">
 	<script>
 		if (typeof module === 'object') {
@@ -48,7 +47,7 @@
 		</div>
 	</div>
 	<script>
-		const dev = true;
+		const dev = false;
 		const electron = require('electron');
 		const {
 			remote
@@ -107,15 +106,20 @@
 										"<td>" + data.classes[i].name + "</td>" +
 										"<td>" + data.classes[i].title + "</td>" +
 										"<td><input id='content-icon-" + data.classes[i].name + "' type='text' value='" + data.classes[i].icon + "' /></td>" +
-										"<td style='background:#" + data.classes[i].color + ";display:flex;'><input style='flex:1;' onkeyup='$(this).parent().css({\"background\":$(this).val()});$(this).next().val($(this).val())' id='content-color-" + data.classes[i].name +
+										"<td style='color:" + ((parseInt(data.classes[i].color.substring(0, 2), 16) * 0.299 + parseInt(data.classes[i].color.substring(2, 4), 16) * 0.587 + parseInt(data.classes[i].color.substring(4, 6), 16) * 0.114) > 186 ? "#000000" :
+											"#FFFFFF") +
+										";background:#" + data.classes[i].color + ";display:flex;'><input style='flex:1;' onkeyup='$(this).parent().css({\"background\":$(this).val()});$(this).next().val($(this).val())' id='content-color-" + data.classes[i].name +
 										"' type='text' value='#" + data.classes[i].color +
-										"' /><input style='width:100%;height:3em;flex:4;' onchange='$(this).prev().val($(this).val());$(this).parent().css({\"background\":$(this).val()});' type='color' value='#" + data.classes[i].color + "' /></td>" +
+										"' /><input id='content-color-input-" + data.classes[i].name + "' style='width:100%;height:3em;flex:4;' onchange='$(this).prev().val($(this).val());$(this).parent().css({\"background\":$(this).val()});' type='color' value='#" +
+										data.classes[i].color + "' /></td>" +
 										"</tr>";
 								}
 								out += "</table>";
 								out += "<button id='content-save-btn' class='right button'>Save Settings</button>";
+								out += "<button id='content-randomColour-btn' class='right button'>Random Colours</button>";
 								out += "<div class='line-break'></div>";
-								out += "<button id='mycampus-update-btn' class='button'>Update Data from MyCampus</button><br /><br /><br /><br /><br /><br />";
+								out += "<button id='mycampus-update-btn' class='button'>Update Data from MyCampus</button><br /><br />";
+								out += "<button id='exam-update-btn' class='button'>Get Personalized Exam Schedule</button><br /><br /><br /><br /><br /><br />";
 								$("#pannel-content-wrapper").html(out);
 								SettingsPageLoadEventRegister();
 								break;
@@ -135,6 +139,7 @@
 								out += "<h1>Today's Classes:</h1>";
 								let isTomorrowClass = false;
 								var countDownsArr = [];
+								let eventArr = [];
 								for (let i = 0; i < cal.length; i++) {
 									let now = new Date();
 									let classT = new Date(cal[i].startTime);
@@ -143,7 +148,11 @@
 										isTomorrowClass = true;
 										let co = data.classes[data.classes.findIndex(findCourse(cal[i].code))].color;
 										let classCountHash = saltAndHash(cal[i].crn);
-										out += "<div class='event " + (now.getTime() > classE.getTime() ? "strikeout" : "") + "' style='border-left: 7px solid #" + co + ";'>" +
+										eventArr.push({
+											"id": "#event-" + classCountHash,
+											"course": cal[i].code
+										});
+										out += "<div id='event-" + classCountHash + "' class='event " + (now.getTime() > classE.getTime() ? "strikeout" : "") + "' style='border-left: 7px solid #" + co + ";background:#" + colorFade(co, 180) + ";'>" +
 											"<p class='event-name'>" + cal[i].name + "</p>" +
 											"<p class='event-location'>" + cal[i].type + " - " + cal[i].place + "</p>" +
 											"<p class='event-time'>" + (new Date(cal[i].startTime)).toLocaleTimeString() + " - " + (new Date(cal[i].endTime)).toLocaleTimeString() + "</p>";
@@ -173,11 +182,26 @@
 										isTomorrowClass = true;
 										let co = data.classes[data.classes.findIndex(findCourse(cal[i].code))].color;
 										let classCountHash = saltAndHash(cal[i].crn);
-										out += "<div class='event' style='border-left: 7px solid #" + co + ";'>" +
+										let eventIcon = "book";
+										for (let o = 0; o < data.classes.length; o++) {
+											if (cal[i].code === data.classes[o].name) {
+												eventIcon = data.classes[o].icon;
+											}
+										}
+										eventArr.push({
+											"id": "#event-" + classCountHash,
+											"course": cal[i].code
+										});
+										out += "<div id='event-" + classCountHash + "' class='event' style='border-left: 7px solid #" + co + ";background:#" + colorFade(co, 180) + ";'>" +
+											"<div class='event-content-wrapper'>" +
 											"<p class='event-name'>" + cal[i].name + "</p>" +
 											"<p class='event-location'>" + cal[i].type + " - " + cal[i].place + "</p>" +
 											"<p class='event-time'>" + (new Date(cal[i].startTime)).toLocaleTimeString() + " - " + (new Date(cal[i].endTime)).toLocaleTimeString() + "</p>" +
 											"<div class='countd' id='" + classCountHash + "'><span id='" + classCountHash + "-text'></span></div>" +
+											"</div>" +
+											"<div class='event-icon-wrapper'>" +
+											"<i style='font-size:3em;color:" + co + ";' class='fa fa-" + eventIcon + "'></i>" +
+											"</div>" +
 											"</div>";
 										countDownsArr.push({
 											"container": classCountHash,
@@ -191,7 +215,8 @@
 								}
 								out += "</div></div>";
 								out += "<div class='column'  style='width:100%;padding:1em;'><div class='column-content'>";
-								out += "<div class='row-wrapper' style='justify-content:space-between;align-items:center;'><h1>To-Do</h1><button id='overview-addtodo-btn' style='width:2em;height:2em;' class='button'>+</button></div>";
+								out +=
+									"<div class='row-wrapper' style='justify-content:space-between;align-items:center;'><h1>To-Do</h1><button id='overview-addtodo-btn' class='button'>New To-Do</button></div>";
 								var list_todo = fs.readFileSync(pt("todo_list.json"));
 								if (list_todo != "") {
 									list_todo = JSON.parse(list_todo);
@@ -256,6 +281,23 @@
 										}, 1500);
 									});
 								}
+								for (let i = 0; i < eventArr.length; i++) {
+									let eventCodeIndex = 0;
+									for (let j = 0; j < menuListContent.length; j++) {
+										if (menuListContent[j].name != undefined) {
+											if (menuListContent[j].name === eventArr[i].course) {
+												eventCodeIndex = j;
+											}
+										}
+									}
+									$(eventArr[i].id).click(() => {
+										loadPageContent(eventCodeIndex);
+										for (let i = 0; i < jqMenuList.length; i++) {
+											$(jqMenuList[i]).removeClass('active');
+										}
+										$(jqMenuList[eventCodeIndex]).addClass('active');
+									});
+								}
 								OverviewPageLoadEventRegister();
 								break;
 							default:
@@ -279,6 +321,8 @@
 								out += "</div>";
 								out += "<div class='column' style='width:100%;padding:1em;'>" +
 									"<div class='column-content'>";
+								out +=
+									"<div class='row-wrapper sticky-shim' style='justify-content:space-between;align-items:center;position:sticky;position:-webkit-sticky;top:50px;'><h1>To-Do</h1><button id='overview-addtodo-btn' class='button'>New To-Do</button></div>";
 								var list_todo = fs.readFileSync(pt("todo_list.json"));
 								if (list_todo != "") {
 									list_todo = JSON.parse(list_todo);
@@ -509,12 +553,42 @@
 
 		function CoursePageLoadEventRegister(coursecode) {
 			let filePath = "content.json";
-			fs.readFile(pt(filePath), 'utf8', (err, data) => {
-				data = JSON.parse(data);
-				let index = data.classes.findIndex(findCourse(coursecode));
-				if (data.classes[index].color) {
-					$("#course-colourselect").val("#" + data.classes[index].color)
-				}
+			document.getElementById("overview-addtodo-btn").addEventListener("click", (e) => {
+				const BrowserWindow = remote.BrowserWindow;
+				var win = new BrowserWindow({
+					parent: remote.getCurrentWindow(),
+					modal: true,
+					width: 400,
+					height: 650,
+					minHeight: 650,
+					minWidth: 400,
+					maxHeight: 650,
+					maxWidth: 400,
+					frame: false
+				});
+				win.on('close', () => {
+					remote.getCurrentWindow().show();
+					remote.getCurrentWindow().focus();
+					let eventCodeIndex = 0;
+					for (let j = 0; j < menuListContent.length; j++) {
+						if (menuListContent[j].name != undefined) {
+							if (menuListContent[j].name === coursecode) {
+								eventCodeIndex = j;
+							}
+						}
+					}
+					loadPageContent(eventCodeIndex);
+				});
+				win.setMenu(null);
+				win.loadURL(url.format({
+					pathname: path.join(__dirname, '/addTodo.html'),
+					protocol: 'file:',
+					slashes: true
+				}));
+				win.once('ready-to-show', () => {
+					win.show();
+					win.focus();
+				});
 			});
 		}
 
@@ -535,7 +609,9 @@
 				menuListContent.push(pages[0]);
 				menuListContent.push(pages[1]);
 				for (let i = 0; i < classes.length; i++) {
-					stout += '<div id="menu-' + classes[i].name + '" style="background:#' + classes[i].color + '" class="menu-item"><i class="fa fa-' + classes[i].icon + '" aria-hidden="true"></i><span>' + classes[i].name + '</span></div>';
+					stout += '<div id="menu-' + classes[i].name + '" style="color:' + ((parseInt(classes[i].color.substring(0, 2), 16) * 0.299 + parseInt(classes[i].color.substring(2, 4), 16) * 0.587 + parseInt(classes[i].color.substring(4, 6), 16) * 0.114) >
+						186 ?
+						"#000000" : "#FFFFFF") + ';background:#' + classes[i].color + '" class="menu-item"><i class="fa fa-' + classes[i].icon + '" aria-hidden="true"></i><span>' + classes[i].name + '</span></div>';
 					jqMenuList.push("#menu-" + classes[i].name);
 					menuListContent.push(classes[i]);
 				}
@@ -584,6 +660,57 @@
 				}
 				fs.writeFileSync(pt("content.json"), JSON.stringify(cont));
 				loadSideBar(() => {});
+			});
+
+			document.getElementById('content-randomColour-btn').addEventListener("click", (e) => {
+				let cont = JSON.parse(fs.readFileSync(pt("content.json"), 'utf8'));
+				for (let i = 0; i < cont.classes.length; i++) {
+					let ranColour = randomHexColour();
+					let textColour = ((parseInt(ranColour.substring(0, 2), 16) * 0.299 + parseInt(ranColour.substring(2, 4), 16) * 0.587 + parseInt(ranColour.substring(4, 6), 16) * 0.114) > 186 ? "#000000" : "#FFFFFF");
+					$("#content-color-" + cont.classes[i].name).parent().css({
+						"background": "#" + ranColour,
+						"color": textColour
+					});
+					$("#content-color-" + cont.classes[i].name).val("#" + ranColour);
+					$("#content-color-" + cont.classes[i].name).css({
+						"color": textColour
+					});
+					$("#content-color-input-" + cont.classes[i].name).val("#" + ranColour);
+					$("#content-color-input-" + cont.classes[i].name).css({
+						"color": textColour
+					});
+				}
+			});
+
+			document.getElementById("exam-update-btn").addEventListener("click", (e) => {
+				const BrowserWindow = remote.BrowserWindow;
+				var win = new BrowserWindow({
+					parent: remote.getCurrentWindow(),
+					modal: true,
+					width: 400,
+					height: 400,
+					minHeight: 400,
+					minWidth: 400,
+					maxHeight: 400,
+					maxWidth: 400,
+					frame: false
+				});
+				win.on('close', () => {
+					remote.getCurrentWindow().show();
+					remote.getCurrentWindow().focus();
+					loadSideBar(() => {});
+					loadPageContent(0);
+				});
+				win.setMenu(null);
+				win.loadURL(url.format({
+					pathname: path.join(__dirname, '/exam_login.html'),
+					protocol: 'file:',
+					slashes: true
+				}));
+				win.once('ready-to-show', () => {
+					win.show();
+					win.focus();
+				});
 			});
 
 			document.getElementById("mycampus-update-btn").addEventListener("click", (e) => {
@@ -709,6 +836,15 @@
 				});
 			});
 		};
+
+		function randomHexColour() {
+			var letters = '0123456789ABCDEF'.split('');
+			var color = '';
+			for (var i = 0; i < 6; i++) {
+				color += letters[Math.round(Math.random() * 15)];
+			}
+			return color;
+		}
 
 		var saltLength = 5;
 		var generateSalt = function() {

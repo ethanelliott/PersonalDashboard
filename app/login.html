@@ -86,8 +86,7 @@
 		}
 
 		.error {
-			color: red;
-			-webkit-text-stroke: 1px white;
+			color: rgb(210, 77, 77);
 			text-align: center;
 			font-size: 2em;
 		}
@@ -314,7 +313,7 @@
 													"name": CRNS[i].code,
 													"title": CRNS[i].name,
 													"icon": "book",
-													"color": "",
+													"color": randomHexColour(),
 													"lecture": CRNS.find(findCourseType("Lecture", CRNS[i].code)),
 													"lab": CRNS.find(findCourseType("Laboratory", CRNS[i].code)),
 													"tutorial": CRNS.find(findCourseType("Tutorial", CRNS[i].code))
@@ -335,11 +334,20 @@
 							});
 						} else {
 							console.log("Login Error");
-							$("#settings-mycamploginerror").html("Error<br /> Check Login Details<br />");
+							$(".error").html("Error: Login Failed");
 						}
 					});
 				});
 			};
+
+			function randomHexColour() {
+				var letters = '0123456789ABCDEF'.split('');
+				var color = '';
+				for (var i = 0; i < 6; i++) {
+					color += letters[Math.round(Math.random() * 15)];
+				}
+				return color;
+			}
 
 			function findCourseType(courseType, courseID) {
 				return function(element) {
@@ -349,8 +357,8 @@
 
 			document.onreadystatechange = function() {
 				if (document.readyState == "complete") {
-					//const win = remote.getCurrentWindow();
-					//win.webContents.openDevTools();
+					const win = remote.getCurrentWindow();
+					win.webContents.openDevTools();
 					init();
 				}
 			};
