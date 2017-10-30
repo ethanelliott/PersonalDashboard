@@ -37,6 +37,16 @@
 		</div>
 	</div>
 	<div class="content-wrapper">
+		<div id="mainContentModal" class="modal">
+			<div class="modal-content">
+				<h1>Are you sure you want to delete this?</h1>
+				<h4>This cannot be undone...</h4>
+				<div style="display:flex;justify-content:flex-end; flex-direction:row;">
+					<button id="modal-confirm-btn" style="width:100px;margin-right:2vw;" class="button" type="button">Yes</button>
+					<button id="modal-cancel-btn" style="width:100px;margin-right:2vw;" class="button" type="button">Cancel</button>
+				</div>
+			</div>
+		</div>
 		<div class="left-pannel">
 
 		</div>
@@ -82,6 +92,36 @@
 			if (g > 255) g = 255;
 			else if (g < 0) g = 0;
 			return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
+		}
+
+		function showConfirmationDialog(callbackSuccess, callbackFailure) {
+			$("#mainContentModal").css({
+				"display": "flex",
+				"opacity": 0
+			});
+			$("#mainContentModal").animate({
+				"opacity": 1
+			}, 200);
+			$("#modal-confirm-btn").click(() => {
+				$("#mainContentModal").animate({
+					"opacity": 0
+				}, 200, () => {
+					$("#mainContentModal").css({
+						"display": "none"
+					});
+				});
+				callbackSuccess();
+			});
+			$("#modal-cancel-btn").click(() => {
+				$("#mainContentModal").animate({
+					"opacity": 0
+				}, 200, () => {
+					$("#mainContentModal").css({
+						"display": "none"
+					});
+				});
+				callbackFailure();
+			});
 		}
 
 		function loadPageContent(menuListArrayIndex) {
@@ -270,15 +310,19 @@
 								for (let i = 0; i < toDoArr.length; i++) {
 									moveProgressBar(toDoArr[i]);
 									$("#" + toDoArr[i].id + ".todo").click(() => {
-										$("#" + toDoArr[i].id + ".todo").fadeOut();
-										setTimeout(() => {
-											$("#" + toDoArr[i].id + ".todo").remove();
-											fs.readFile(pt("todo_list.json"), (err, ToDodata) => {
-												ToDodata = JSON.parse(ToDodata);
-												ToDodata.splice(ToDodata.findIndex(findTodoID(toDoArr[i].id)), 1);
-												fs.writeFile(pt("todo_list.json"), JSON.stringify(ToDodata), (err) => {});
-											});
-										}, 1500);
+										showConfirmationDialog(() => {
+											$("#" + toDoArr[i].id + ".todo").fadeOut();
+											setTimeout(() => {
+												$("#" + toDoArr[i].id + ".todo").remove();
+												fs.readFile(pt("todo_list.json"), (err, ToDodata) => {
+													ToDodata = JSON.parse(ToDodata);
+													ToDodata.splice(ToDodata.findIndex(findTodoID(toDoArr[i].id)), 1);
+													fs.writeFile(pt("todo_list.json"), JSON.stringify(ToDodata), (err) => {});
+												});
+											}, 1500);
+										}, () => {
+											//just do nothing
+										});
 									});
 								}
 								for (let i = 0; i < eventArr.length; i++) {
