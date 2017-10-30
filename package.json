@@ -1,32 +1,32 @@
 {
-  "name": "UOITPD",
-  "version": "1.4.0",
-  "description": "",
-  "main": "main.js",
-  "build": {
-    "appId": "com.ethan.uoit.personaldash.app"
-  },
-  "dependencies": {
-    "cheerio": "^1.0.0-rc.2",
-    "crypto": "^1.0.1",
-    "electron-sticky-shim": "gist:4c7dd81a61adcb648944a16b0fac717f",
-    "fullcalendar": "^3.5.1",
-    "mkdirp": "^0.5.1",
-    "moment": "^2.18.1",
-    "request": "^2.82.0",
-    "request-ssl": "0.0.14",
-    "sticky-state": "^2.4.1"
-  },
-  "devDependencies": {
-    "electron-builder": "^19.30.1",
-    "electron-prebuilt": "^1.4.13"
-  },
-  "scripts": {
-    "start": "electron .",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder --publish=never",
-    "dist-linux": "electron-builder --linux"
-  },
-  "author": "Ethan Elliott",
-  "license": "ISC"
+    "name": "UOITPD",
+    "version": "1.5.0",
+    "description": "A personal dashboard for UOIT students.",
+    "main": "main.js",
+    "build": {
+        "appId": "com.ethan.uoit.personaldash.app"
+    },
+    "dependencies": {
+        "cheerio": "^1.0.0-rc.2",
+        "crypto": "^1.0.1",
+        "electron-sticky-shim": "gist:4c7dd81a61adcb648944a16b0fac717f",
+        "fullcalendar": "^3.5.1",
+        "mkdirp": "^0.5.1",
+        "moment": "^2.18.1",
+        "request": "^2.82.0",
+        "request-ssl": "0.0.14",
+        "sticky-state": "^2.4.1"
+    },
+    "devDependencies": {
+        "electron-builder": "^19.30.1",
+        "electron-prebuilt": "^1.4.13"
+    },
+    "scripts": {
+        "start": "electron .",
+        "pack": "electron-builder --dir",
+        "dist": "electron-builder --publish=never",
+        "dist-linux": "electron-builder --linux"
+    },
+    "author": "Ethan Elliott",
+    "license": "ISC"
 }

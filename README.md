@@ -10,7 +10,7 @@ Just login with your UOIT MyCampus credentials, and let the application get all 
 ### Features
 * Simple - Just login and begin organizing your life!
 * Built-in Calendar
-* Class specific to-to lists
+* Class specific to-do lists
 * Customizable colours and icons for each class
 * Full-screen dashboard with all the important information for your day
 * To-do countdowns with close to due date warnings
