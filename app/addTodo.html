@@ -1,18 +1,7 @@
 <html>
 
 <head>
-	<script>
-		if (typeof module === 'object') {
-			window.module = module;
-			module = undefined;
-		}
-	</script>
-	<script src="http://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-	<link href="../app/fa/css/font-awesome.css" rel="stylesheet" type="text/css" media="screen" />
-	<script>
-		if (window.module) module = window.module;
-	</script>
-	<link href="https://fonts.googleapis.com/css?family=Roboto:400,100,300,500,700,900,400italic,700italic,300italic" rel="stylesheet" type="text/css" media="screen">
+	<link href="../app/style/roboto.css" rel="stylesheet" type="text/css" media="screen">
 	<style>
 		* {
 			margin: 0;
@@ -106,6 +95,17 @@
 			flex-direction: row;
 		}
 	</style>
+	<script>
+		if (typeof module === 'object') {
+			window.module = module;
+			module = undefined;
+		}
+	</script>
+	<!--<script src="../app/script/jquery.min.js"></script>-->
+	<script src="../app/script/e.js"></script>
+	<script>
+		if (window.module) module = window.module;
+	</script>
 </head>
 
 <body>
@@ -159,6 +159,7 @@
 						out += "<option value='" + data.classes[i].name + "'>" + data.classes[i].title + "</option>"
 					}
 					out += "<option value='other'>Other</option>";
+
 					$("#todo-class").html(out);
 					var dtToday = new Date();
 					var month = dtToday.getMonth() + 1;
@@ -239,7 +240,7 @@
 						$(".error").html("Please fill out all fields.");
 					}
 				});
-			};
+			}
 
 			var saltLength = 5;
 			var generateSalt = function() {
@@ -259,8 +260,8 @@
 				return salt + hash(pass + salt) + hash(salt);
 			};
 
-			document.onreadystatechange = function() {
-				let dev = false;
+			document.onreadystatechange = () => {
+				let dev = true;
 				if (document.readyState == "complete") {
 					const win = remote.getCurrentWindow();
 					if (dev) {
