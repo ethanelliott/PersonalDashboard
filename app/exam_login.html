@@ -314,7 +314,7 @@
 
 			document.onreadystatechange = function() {
 				if (document.readyState == "complete") {
-					let dev = true;
+					let dev = false;
 					if (dev) {
 						const win = remote.getCurrentWindow();
 						win.webContents.openDevTools();

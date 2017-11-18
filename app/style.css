@@ -65,6 +65,10 @@ html {
     overflow: hidden;
 }
 
+.hidden {
+    display: none !important;
+}
+
 :not(input):not(textarea), :not(input):not(textarea)::after, :not(input):not(textarea)::before {
     -webkit-user-select: none;
     user-select: none;
