@@ -222,12 +222,14 @@
 										});
 										let ExamTable = tb[1];
 										let exam = [];
+										let examTodo = [];
 										let courseList = JSON.parse(fs.readFileSync(pt("content.json"))).classes;
 										for (let j = 1; j < ExamTable.children[1].children.length; j++) {
 											if (j % 2 === 0) {
+												let now = new Date();
 												let courseCode = ExamTable.children[1].children[j].children[3].children[0].data.split(" ");
 												let rawDate = ExamTable.children[1].children[j].children[7].children[0].data.split("-");
-												let examDate = new Date(parseCalendarMonth(rawDate[1]) + "-" + rawDate[0] + "-20" + rawDate[2]);
+												let examDate = new Date(parseCalendarMonth(rawDate[1]) + "-" + rawDate[0] + "-" + rawDate[2]);
 												let startTimeDateObject = new Date(examDate.toDateString() + " " + ExamTable.children[1].children[j].children[9].children[0].data);
 												let endTimeDateObject = new Date(examDate.toDateString() + " " + ExamTable.children[1].children[j].children[11].children[0].data);
 												courseCode = courseCode[0] + "" + courseCode[1].slice(0, -1);
@@ -246,6 +248,16 @@
 													"location": ExamTable.children[1].children[j].children[13].children[0].data
 												};
 												exam.push(exam_data);
+
+												let newTodoObject = {
+													"id": saltAndHash(examClassName),
+													"name": "EXAM",
+													"code": courseCode,
+													"title": "",
+													"date": startTimeDateObject.valueOf(),
+													"timeCreated": now.getTime()
+												};
+												examTodo.push(newTodoObject);
 											}
 										}
 										let calendarFilePath = "calendar.json";
@@ -258,7 +270,13 @@
 											return a.startTime - b.startTime;
 										});
 										fs.writeFileSync(pt(calendarFilePath), JSON.stringify(calArr));
-										remote.getCurrentWindow().close();
+
+										let todoData = JSON.parse(fs.readFileSync(pt("todo_list.json")));
+										for (exTodo in examTodo) {
+											todoData.push(examTodo[exTodo]);
+										}
+										fs.writeFileSync(pt("todo_list.json"), JSON.stringify(todoData));
+										//remote.getCurrentWindow().close();
 									});
 								});
 							});
@@ -270,6 +288,24 @@
 				});
 			};
 
+			var saltLength = 5;
+			var generateSalt = function() {
+				var set = '0123456789abcdefghijklmnopqurstuvwxyzABCDEFGHIJKLMNOPQURSTUVWXYZ';
+				var salt = '';
+				for (var i = 0; i < saltLength; i++) {
+					var p = Math.floor(Math.random() * set.length);
+					salt += set[p];
+				}
+				return salt;
+			};
+			var hash = function(str) {
+				return crypto.createHash('md5').update(str).digest('HEX');
+			};
+			var saltAndHash = function(pass) {
+				var salt = generateSalt();
+				return salt + hash(pass + salt) + hash(salt);
+			};
+
 			function findCourseType(courseType, courseID) {
 				return function(element) {
 					return element.type === courseType && element.code === courseID;
@@ -278,6 +314,11 @@
 
 			document.onreadystatechange = function() {
 				if (document.readyState == "complete") {
+					let dev = true;
+					if (dev) {
+						const win = remote.getCurrentWindow();
+						win.webContents.openDevTools();
+					}
 					init();
 				}
 			};

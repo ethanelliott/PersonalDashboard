@@ -65,3 +65,5 @@ raw_class.json
 todo_list.json
 
 dist/
+
+*.sh

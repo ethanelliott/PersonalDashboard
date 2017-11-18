@@ -12,30 +12,6 @@
     outline: 1px solid slategrey;
 }
 
-.sticky {
-    position: -webkit-sticky;
-    position: sticky;
-}
-
-.sticky.sticky-fixed.is-sticky {
-    position: fixed;
-    -webkit-backface-visibility: hidden;
-    -moz-backface-visibility: hidden;
-    backface-visibility: hidden;
-}
-
-.sticky.sticky-fixed.is-sticky:not([style*="margin-top"]) {
-    margin-top: 0 !important;
-}
-
-.sticky.sticky-fixed.is-sticky:not([style*="margin-bottom"]) {
-    margin-bottom: 0 !important;
-}
-
-.sticky.sticky-fixed.is-absolute {
-    position: absolute;
-}
-
 .modal {
     position: fixed;
     z-index: 1;
@@ -49,14 +25,13 @@
     display: none;
     justify-content: center;
     align-items: center;
-    box-shadow: 0 0 15px 1px rgba(0, 0, 0, 0.6);
     opacity: 0;
 }
 
 .modal-content {
+    box-shadow: 0 0 15px 1px rgba(0, 0, 0, 0.6);
     background-color: black;
     padding: 20px;
-    width: 50vw;
 }
 
 .close {
@@ -367,28 +342,74 @@ h2 {
     font-size: 2em;
 }
 
-#settings-classeslist {
+#settings-classeslist, .table {
     border-collapse: collapse;
     width: 100%;
 }
 
-#settings-classeslist th, #settings-classeslist td {
+#settings-classeslist th, #settings-classeslist td, .table th, .table td {
     text-align: left;
     padding: 8px;
     color: white;
+    border: 1px solid white;
 }
 
-#settings-classeslist tr:nth-child(even) {
+#settings-classeslist tr:nth-child(even), .table tr:nth-child(even) {
     background-color: #4e4e4e
 }
 
-#settings-classeslist tr:nth-child(odd) {
+#settings-classeslist tr:nth-child(odd), .table tr:nth-child(odd) {
     background-color: #2a2929
 }
 
-#settings-classeslist th {
+#settings-classeslist th, .table th {
     background-color: var(--main-c);
     color: white;
+}
+
+.container {
+    padding: 2vw 2vh;
+    padding-top: 0;
+}
+
+.table-editable {
+    position: relative;
+    width: 60vw !important;
+    max-height: 60vh;
+    overflow-y: scroll;
+}
+
+.table-remove {
+    color: #f00;
+    cursor: pointer;
+    font-size: 2em !important;
+}
+
+.table-remove:hover {
+    color: #700;
+}
+
+.table-up, .table-down {
+    color: #007;
+    cursor: pointer;
+}
+
+.table-up:hover, .table-down:hover {
+    color: #00f;
+}
+
+.table-add {
+    font-size: 3em !important;
+    color: #070;
+    cursor: pointer;
+}
+
+.table-add:hover {
+    color: #0b0;
+}
+
+.hide {
+    display: none;
 }
 
 .event {
@@ -424,7 +445,7 @@ h2 {
     cursor: pointer;
 }
 
-.event.strikeout {
+.event.strikeout p {
     text-decoration: line-through;
 }
 
