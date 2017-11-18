@@ -1,6 +1,6 @@
 {
     "name": "UOITPD",
-    "version": "1.5.2",
+    "version": "1.5.4",
     "description": "A personal dashboard for UOIT students.",
     "main": "main.js",
     "build": {
@@ -9,6 +9,7 @@
     "dependencies": {
         "cheerio": "^1.0.0-rc.2",
         "crypto": "^1.0.1",
+        "electron-drag": "^1.2.0",
         "electron-sticky-shim": "gist:4c7dd81a61adcb648944a16b0fac717f",
         "fullcalendar": "^3.5.1",
         "mkdirp": "^0.5.1",

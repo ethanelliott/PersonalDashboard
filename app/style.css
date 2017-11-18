@@ -126,6 +126,7 @@ button.button:hover {
     align-items: center;
     color: rgba(51, 50, 50, 1);
     -webkit-app-region: drag;
+    margin-top: 3px;
 }
 
 .titlebar>div {
