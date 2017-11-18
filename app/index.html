@@ -33,7 +33,7 @@
 			<button id="min-btn"><i class="fa fa-window-minimize" aria-hidden="true"></i></button>
 			<button id="max-btn"><i class="fa fa-window-restore" aria-hidden="true"></i></button>
 			<button id="full-btn"><i class="fa fa-arrows-alt" aria-hidden="true"></i></button>
-			<button id="dev-btn"><i class="fa fa-cogs" aria-hidden="true"></i></button>
+			<button id="dev-btn" class="hidden"><i class="fa fa-cogs" aria-hidden="true"></i></button>
 		</div>
 	</div>
 	<div class="content-wrapper">
@@ -80,10 +80,6 @@
 
 						jQuery.fn.pop = [].pop;
 						jQuery.fn.shift = [].shift;
-
-						$BTN.click(() => {
-
-						});
 					</script>
 				</div>
 			</div>
@@ -968,10 +964,15 @@
 						window.close();
 					});
 
-					document.getElementById("dev-btn").addEventListener("click", (e) => {
-						const win = remote.getCurrentWindow();
-						win.webContents.openDevTools();
-					});
+					if (dev) {
+						document.getElementById("dev-btn").classList.remove("hidden");
+						document.getElementById("dev-btn").addEventListener("click", (e) => {
+							const win = remote.getCurrentWindow();
+							win.webContents.openDevTools();
+						});
+					} else {
+						document.getElementById("dev-btn").classList.add("hidden");
+					}
 
 					document.getElementById("full-btn").addEventListener("click", (e) => {
 						const BrowserWindow = remote.BrowserWindow;

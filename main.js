@@ -26,7 +26,8 @@ function createWindow () {
 		  minHeight:300,
 		  minWidth:920,
 		  frame:false,
-		  transparent: false
+		  transparent: false,
+		  icon:"icon.ico"
 	  }
   );
   // and load the index.html of the app.
@@ -35,9 +36,6 @@ function createWindow () {
     protocol: 'file:',
     slashes: true
   }))
-
-  // Open the DevTools.
-  //win.webContents.openDevTools()
 
   // Emitted when the window is closed.
   win.on('closed', () => {
