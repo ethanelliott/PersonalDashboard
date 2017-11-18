@@ -4,7 +4,10 @@
     "description": "A personal dashboard for UOIT students.",
     "main": "main.js",
     "build": {
-        "appId": "com.ethan.uoit.personaldash.app"
+        "appId": "com.ethan.uoit.personaldash.app",
+        "win": {
+            "icon": "icon.ico"
+        }
     },
     "dependencies": {
         "cheerio": "^1.0.0-rc.2",
