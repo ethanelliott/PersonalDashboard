@@ -1,7 +1,7 @@
-version: 1.5.0
-releaseDate: '2017-10-30T04:13:36.224Z'
-path: UOITPD Setup 1.5.0.exe
+version: 1.5.2
+releaseDate: '2017-11-18T01:23:18.009Z'
+path: UOITPD Setup 1.5.2.exe
 sha512: >-
-  Gw2xnLJD5Op1vuJ4eBFu5r1APtgHNXLlcEr4p4sJOt7d7H1qFHYie3qcniashRKPKyeAXmoI7gDfJZ27m/WxJA==
-sha2: 5da6af62886e785a7535e48824ca038b5ef796664efd377e96de7f294167f76f
-githubArtifactName: UOITPD-Setup-1.5.0.exe
+  Czi8zDbPLcpTAkQ9s6bURgllUC6Dxw1+FVD5W6BktAuUxVbbX0kKO4zIN3Mvipi9e0yO5hMve+wiseh/PFl2rw==
+sha2: 195a3f8d447475fe4782422d4e4a8a12b8271c6e0805135312070a9c43c445dc
+githubArtifactName: UOITPD-Setup-1.5.2.exe
