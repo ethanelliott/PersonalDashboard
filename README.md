@@ -5,15 +5,19 @@
 [![GitHub release](https://img.shields.io/github/release/ethanelliott/PersonalDashboard.svg?style=flat-square)](https://github.com/ethanelliott/PersonalDashboard)
 
 Personal Dashboard for UOIT students.
+
 Just login with your UOIT MyCampus credentials, and let the application get all the important information for you!
 
 ### Features
 * Simple - Just login and begin organizing your life!
+* Get all class data from mycampus 
 * Built-in Calendar
 * Class specific to-do lists
 * Customizable colours and icons for each class
 * Full-screen dashboard with all the important information for your day
 * To-do countdowns with close to due date warnings
+* Custom or class-specific to-do's
+* Get your exam schedule from mycampus and add it to your calendar!
 
 ## Latest Stable Build
 
