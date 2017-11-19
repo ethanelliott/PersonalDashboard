@@ -36,6 +36,12 @@
 			});
 			return this;
 		},
+		fadeOut: function($time) {
+			/*TODO: Add fadeOut fn*/
+		},
+		fadeIn: function($time) {
+			/*TODO: Add fadeIn fn*/
+		},
 		val: function() {
 			var len = this.length;
 			return this[--len].value;

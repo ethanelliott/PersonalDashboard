@@ -176,10 +176,10 @@
 					$("#todo-class").change(() => {
 						let backC = "";
 						if ($("#todo-class").val() === "other") {
-							$("#todo-other-title").fadeIn(100);
+							$("#todo-other-title").show();
 							backC = "#000000";
 						} else {
-							$("#todo-other-title").fadeOut(100);
+							$("#todo-other-title").hide();
 							backC = "#" + data.classes[data.classes.findIndex(findCourseByCode($("#todo-class").val()))].color;
 						}
 						$("html").css({

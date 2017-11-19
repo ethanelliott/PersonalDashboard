@@ -46,6 +46,15 @@
 				</div>
 			</div>
 		</div>
+		<div id="note-modal" class="modal">
+			<div class="modal-content">
+				<h1>Title</h1>
+				<p>reminder to do thing</p>
+				<div style="display:flex;justify-content:flex-end; flex-direction:row;">
+					<button id="modal-save-btn" style="width:100px;margin-right:2vw;" class="button" type="button">Save</button>
+				</div>
+			</div>
+		</div>
 		<div class="left-pannel">
 
 		</div>
@@ -56,7 +65,7 @@
 		</div>
 	</div>
 	<script>
-		const dev = false;
+		const dev = true;
 		const electron = require('electron');
 		const {
 			remote
@@ -164,11 +173,49 @@
 								break;
 							case 'Calendar':
 								out += "<div class='row-wrapper'>";
-								out += "<div class='title'>" + jsonContent.title + "</div>";
+								out += "<button id='content-new-event-btn' class='right action-button'>+</button>";
 								out += "</div>";
 								out += "<div id='calendar'></div>";
 								$("#pannel-content-wrapper").html(out);
 								CalendarPageLoadEventRegister();
+								break;
+							case 'Notes':
+								out += "<div class='row-wrapper spacebetween'>";
+								out += "<div class='title'>" + jsonContent.title + "</div>";
+								out += "<button id='content-new-note-btn' class='right action-button'>+</button>";
+								out += "</div>";
+								out += "<div class='column-wrapper' style='display:flex;justify-content:center;align-items:center;'>";
+								out += "<div class='notes-wrapper'>";
+								for (let i = 0; i < 10; i++) {
+									out += "<div id='" + saltAndHash("wednesdaymydudes") + "' class='note' style='height:" + ((Math.random() * 350) + 100) + "px;' draggable='false'>";
+									out += "<h1 class='note-title' contenteditable='false'>Title</h1>";
+									out += "<p class='note-text' contenteditable='false'>reminder to do thing</p>";
+									out += "</div>";
+								}
+								out += "</div>";
+								out += "</div>";
+								$("#pannel-content-wrapper").html(out);
+								break;
+							case 'Grades':
+								out += "<div class='row-wrapper'>";
+								out += "<div class='title'>" + jsonContent.title + "</div>";
+								out += "</div>";
+								out += "<div class='column-wrapper'>";
+								out += "<h1>Class 1</h1>";
+								out += "<table class='table'>";
+								out += "<tr>";
+								out += "<th>Item</th>";
+								out += "<th>Weight (%)</th>";
+								out += "<th>Mark (%)</th>";
+								out += "</tr>";
+								out += "<tr>";
+								out += "<td contenteditable='true'>Exam</td>";
+								out += "<td contenteditable='true'>50</td>";
+								out += "<td contenteditable='true'>80</td>";
+								out += "</tr>";
+								out += "</table>";
+								out += "</div>";
+								$("#pannel-content-wrapper").html(out);
 								break;
 							case 'Overview':
 								screenUpdateInterval = setInterval(() => {
@@ -668,10 +715,13 @@
 				let classes = data.classes;
 				let pages = data.pages;
 				let stout = "";
-				jqMenuList.push("#menu-overview");
-				jqMenuList.push("#menu-calendar");
-				menuListContent.push(pages[0]);
-				menuListContent.push(pages[1]);
+				for (let i = 0; i < pages.length - 1; i++) {
+					jqMenuList.push("#menu-" + pages[i].title.toLowerCase());
+					menuListContent.push(pages[i]);
+				}
+				for (let i = 0; i < pages.length - 1; i++) {
+					stout += '<div id="menu-' + pages[i].title.toLowerCase() + '" class="menu-item"><i class="fa fa-' + pages[i].icon + '" aria-hidden="true"></i><span>' + pages[i].title + '</span></div>';
+				}
 				for (let i = 0; i < classes.length; i++) {
 					stout += '<div id="menu-' + classes[i].name + '" style="color:' + ((parseInt(classes[i].color.substring(0, 2), 16) * 0.299 + parseInt(classes[i].color.substring(2, 4), 16) * 0.587 + parseInt(classes[i].color.substring(4, 6), 16) * 0.114) >
 						186 ?
@@ -679,12 +729,10 @@
 					jqMenuList.push("#menu-" + classes[i].name);
 					menuListContent.push(classes[i]);
 				}
-				stout = '<div id="menu-overview" class="menu-item"><i class="fa fa-home" aria-hidden="true"></i><span>Overview</span></div>' +
-					'<div id="menu-calendar" class="menu-item"><i class="fa fa-calendar" aria-hidden="true"></i><span>Calendar</span></div>' + stout;
 				stout += '<div id="menu-settings" class="menu-item"><i class="fa fa-cog" aria-hidden="true"></i><span>Settings</span></div>';
 				$(".left-pannel").html(stout);
-				jqMenuList.push("#menu-settings");
-				menuListContent.push(pages[2]);
+				jqMenuList.push("#menu-" + pages[pages.length - 1].title.toLowerCase());
+				menuListContent.push(pages[pages.length - 1]);
 				loadPageContent(pageIndex);
 				for (let i = 0; i < jqMenuList.length; i++) {
 					$(jqMenuList[i]).click(() => {
