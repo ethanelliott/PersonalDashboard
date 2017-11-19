@@ -27,6 +27,11 @@ Just login with your UOIT MyCampus credentials, and let the application get all 
     <th>Release Date</th>
     <th colspan="3">Download</th>
   </tr>
+  <tr>
+    <td>v1.5.8</td>
+    <td>18/11/17</td>
+    <td><a href="https://github.com/ethanelliott/PersonalDashboard/releases/download/v1.5.8/UOITPD.Setup.1.5.8.exe">windows</a></td>
+  </tr>
    <tr>
     <td>v1.5.5</td>
     <td>17/11/17</td>
