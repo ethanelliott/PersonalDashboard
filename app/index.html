@@ -36,53 +36,6 @@
 		</div>
 	</div>
 	<div class="content-wrapper">
-		<div id="markTable" class="modal">
-			<div class="modal-content">
-				<div class="container">
-					<div style="width:100%;display:flex;justify-content:space-between;align-items:center; flex-direction:row;">
-						<h1>Add / Edit Marks</h1>
-						<i class="table-add fa fa-plus"></i>
-					</div>
-					<div id="mark-table" class="table-editable">
-						<table class="table">
-							<tr class="hide">
-								<td contenteditable="true"></td>
-								<td contenteditable="true"></td>
-								<td contenteditable="true"></td>
-								<td style="text-align: center;">
-									<i class="table-remove fa fa-times" onclick="$(this).parents('tr').detach();"></i>
-								</td>
-							</tr>
-							<tr>
-								<th>Assignment/Mark Name</th>
-								<th>Weight (%)</th>
-								<th>Score (%)</th>
-								<th>Del</th>
-							</tr>
-						</table>
-					</div>
-					<div style="display:flex;justify-content:flex-end; flex-direction:row;margin-top:2vh;">
-						<button id="mark-save-btn" style="width:100px;margin-right:2vw;" class="button" type="button">Save</button>
-						<button id="mark-cancel-btn" style="width:100px;margin-right:2vw;" class="button" type="button">Cancel</button>
-					</div>
-					<script>
-						let $TABLE = $('#mark-table');
-
-						$('.table-add').click(() => {
-							var $clone = $TABLE.find('tr.hide').clone(true).removeClass('hide table-line');
-							$TABLE.find('table').append($clone);
-						});
-
-						document.querySelectorAll('.table-remove').forEach(() => {
-							console.log(this);
-						});
-
-						jQuery.fn.pop = [].pop;
-						jQuery.fn.shift = [].shift;
-					</script>
-				</div>
-			</div>
-		</div>
 		<div id="mainContentModal" class="modal">
 			<div class="modal-content">
 				<h1>Are you sure you want to delete this?</h1>
@@ -103,7 +56,7 @@
 		</div>
 	</div>
 	<script>
-		const dev = false;
+		const dev = true;
 		const electron = require('electron');
 		const {
 			remote
@@ -138,39 +91,6 @@
 			if (g > 255) g = 255;
 			else if (g < 0) g = 0;
 			return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
-		}
-
-		function showMarkEditDialog(callbackSuccess, callbackFailure) {
-			$("#markTable").css({
-				"display": "flex",
-				"opacity": 0
-			});
-			$("#markTable").animate({
-				"opacity": 1
-			}, 200);
-			$("#mark-save-btn").off().click(() => {
-				$("#markTable").animate({
-					"opacity": 0
-				}, 200, () => {
-					$("#markTable").css({
-						"display": "none"
-					});
-				});
-				callbackSuccess();
-			});
-			/*
-			$("#mark-cancel-btn").off("cancel-close").click(() => {
-				$("#markTable").animate({
-					"opacity": 0
-				}, 200, () => {
-					$("#markTable").css({
-						"display": "none"
-					});
-				});
-				callbackFailure();
-
-			});
-			*/
 		}
 
 		function showConfirmationDialog(callbackSuccess, callbackFailure) {
@@ -243,7 +163,9 @@
 								SettingsPageLoadEventRegister();
 								break;
 							case 'Calendar':
+								out += "<div class='row-wrapper'>";
 								out += "<div class='title'>" + jsonContent.title + "</div>";
+								out += "</div>";
 								out += "<div id='calendar'></div>";
 								$("#pannel-content-wrapper").html(out);
 								CalendarPageLoadEventRegister();
@@ -454,7 +376,6 @@
 								out += "</div>";
 								out += "<div class='column-content'>";
 								out += "<h1>TEST</h1>";
-								out += "<button id='edit-class-marks-btn' class='button' type='button'>Edit Marks</button>";
 								out += "</div>"
 								out += "</div>";
 								out += "<div class='column' style='width:100%;padding:1em;'>" +
@@ -695,14 +616,6 @@
 
 		function CoursePageLoadEventRegister(coursecode) {
 			let filePath = "content.json";
-
-			document.getElementById("edit-class-marks-btn").addEventListener("click", (e) => {
-				showMarkEditDialog(() => {
-					console.log("save");
-				}, () => {
-					console.log("cancel");
-				});
-			});
 
 			document.getElementById("overview-addtodo-btn").addEventListener("click", (e) => {
 				const BrowserWindow = remote.BrowserWindow;

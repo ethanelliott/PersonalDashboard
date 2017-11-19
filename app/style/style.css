@@ -377,42 +377,6 @@ h2 {
     padding-top: 0;
 }
 
-.table-editable {
-    position: relative;
-    width: 60vw !important;
-    max-height: 60vh;
-    overflow-y: scroll;
-}
-
-.table-remove {
-    color: #f00;
-    cursor: pointer;
-    font-size: 2em !important;
-}
-
-.table-remove:hover {
-    color: #700;
-}
-
-.table-up, .table-down {
-    color: #007;
-    cursor: pointer;
-}
-
-.table-up:hover, .table-down:hover {
-    color: #00f;
-}
-
-.table-add {
-    font-size: 3em !important;
-    color: #070;
-    cursor: pointer;
-}
-
-.table-add:hover {
-    color: #0b0;
-}
-
 .hide {
     display: none;
 }
@@ -468,7 +432,7 @@ h2 {
 }
 
 .countd {
-    font-weight: 100;
+    font-weight: 300;
     font-style: italic;
 }
 
@@ -486,11 +450,9 @@ h2 {
     box-shadow: 0 0 15px 1px rgba(0, 0, 0, 0.6);
 }
 
-.todo-name {}
-
 .todo-code {
     font-style: italic;
-    font-weight: 100;
+    font-weight: 300;
 }
 
 .to-do-content-wrapper {
