@@ -1,6 +1,6 @@
 {
     "name": "UOITPD",
-    "version": "1.5.5",
+    "version": "1.5.8",
     "description": "A personal dashboard for UOIT students.",
     "main": "main.js",
     "build": {
