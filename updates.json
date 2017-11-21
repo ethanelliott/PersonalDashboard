@@ -1,7 +1,7 @@
 {
     "v1.6.0": {
-        "update": "https://github.com/ethanelliott/PersonalDashboard/releases/download/v1.5.9/UOITPD.Setup.1.5.9.exe",
-        "install": "https://github.com/ethanelliott/PersonalDashboard/releases/download/v1.5.9/UOITPD.Setup.1.5.9.exe",
+        "update": "https://github.com/ethanelliott/PersonalDashboard/releases/download/v1.6.0",
+        "install": "https://github.com/ethanelliott/PersonalDashboard/releases/download/v1.6.0/UOITPD.Setup.1.6.0.exe",
         "version": "1.5.8"
     }
 }
