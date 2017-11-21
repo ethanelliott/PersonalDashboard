@@ -1,0 +1,263 @@
+<html>
+
+<head>
+	<link href="../app/style/roboto.css" rel="stylesheet" type="text/css" media="screen">
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			--main-c: rgba(50, 50, 50, 1);
+		}
+
+		html {
+			background: rgba(0, 0, 0, 1);
+			-webkit-app-region: drag;
+			color: white;
+			font-family: 'Roboto', sans-serif;
+			font-size: 14px;
+		}
+
+		select {
+			cursor: pointer;
+			font-size: 1.5em !important;
+		}
+
+		input {
+			cursor: text;
+		}
+
+		input,
+		select {
+			-webkit-user-select: none;
+			user-select: none;
+			-webkit-app-region: no-drag;
+			width: 100%;
+			font-size: 2em;
+			outline: none;
+			border: none;
+			margin-top: 1em;
+			padding: 0.4em;
+			color: white;
+			background: rgba(83, 82, 82, 1);
+		}
+
+		button {
+			-webkit-user-select: none;
+			user-select: none;
+			cursor: default;
+			-webkit-app-region: no-drag;
+			width: 100%;
+			margin: 0 0.5em;
+			font-size: 2em;
+			outline: none;
+			border: none;
+			margin-top: 1em;
+			background: var(--main-c);
+			padding: 0.4em;
+			color: white;
+		}
+
+		button:hover {
+			cursor: pointer;
+			background: rgba(33, 32, 32, 1)
+		}
+
+		body {
+			width: 100%;
+			height: 100%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
+		.content-wrapper {
+			width: 90%;
+		}
+
+		.title {
+			font-size: 3em;
+			text-align: center;
+			margin-bottom: 0.5em;
+		}
+
+		.error {
+			color: red;
+			-webkit-text-stroke: 1px white;
+			text-align: center;
+			font-size: 2em;
+		}
+
+		.button-wrapper {
+			display: flex;
+			width: 100%;
+			justify-content: center;
+			align-items: center;
+			flex-direction: row;
+		}
+	</style>
+	<script>
+		if (typeof module === 'object') {
+			window.module = module;
+			module = undefined;
+		}
+	</script>
+	<!--<script src="../app/script/jquery.min.js"></script>-->
+	<script src="../app/script/e.js"></script>
+	<script>
+		if (window.module) module = window.module;
+	</script>
+</head>
+
+<body>
+	<div class="content-wrapper">
+		<div class="title">
+			New Event
+		</div>
+		<div class="error">
+
+		</div>
+		<input id="event-name" type="text" placeholder="Event Name" />
+		<select id="event-class"></select>
+		<input id="event-other-colour" type="color" style="height:2em;" placeholder="#000000" />
+		<input id="event-date" type="date" />
+		<input id="event-start-time" type="time" />
+		<input id="event-end-time" type="time" />
+		<div class="button-wrapper">
+			<button id="addevent-cancel-btn">Cancel</button>
+			<button id="addevent-add-btn">Add</button>
+		</div>
+	</div>
+	<script>
+		(function() {
+
+			const electron = require('electron');
+			const {
+				remote
+			} = electron;
+			const dialog = remote.dialog;
+			const fs = require('fs');
+			const path = require('path')
+			const url = require('url');
+			const request = require('request-ssl');
+			const cheerio = require('cheerio');
+			const crypto = require('crypto');
+
+			function findCourseByCode(code) {
+				return (element) => {
+					return element.name === code;
+				};
+			}
+
+			function pt(_pa) {
+				return path.join(remote.getGlobal('APDD'), _pa);
+			}
+
+			function init() {
+				fs.readFile(pt("content.json"), (err, data) => {
+					data = JSON.parse(data);
+					let out = "";
+					for (let i = 0; i < data.classes.length; i++) {
+						out += "<option value='" + data.classes[i].name + "'>" + data.classes[i].title + "</option>"
+					}
+					out += "<option value='other'>Other</option>";
+
+					$("#event-class").html(out);
+					var dtToday = new Date();
+					var month = dtToday.getMonth() + 1;
+					var day = dtToday.getDate();
+					var year = dtToday.getFullYear();
+					if (month < 10) {
+						month = '0' + month.toString();
+					}
+					if (day < 10) {
+						day = '0' + day.toString();
+					}
+					var minDate = year + '-' + month + '-' + day;
+					$('#event-date').attr('min', minDate);
+					$("#event-class").change(() => {
+						let backC = "";
+						if ($("#event-class").val() === "other") {
+							$("#event-other-title").show();
+							backC = "#000000";
+						} else {
+							$("#event-other-title").hide();
+							backC = "#" + data.classes[data.classes.findIndex(findCourseByCode($("#event-class").val()))].color;
+						}
+						$("html").css({
+							"background": backC
+						});
+						let ccc = backC.split("#")[1];
+						let textC = ((parseInt(ccc.substring(0, 2), 16) * 0.299 + parseInt(ccc.substring(2, 4), 16) * 0.587 + parseInt(ccc.substring(4, 6), 16) * 0.114) > 186 ? "#000000" : "#FFFFFF")
+						$("body").css({
+							"color": textC
+						});
+					});
+					if ($("#event-class").val() === "other") {
+						backC = "#000000";
+					} else {
+						backC = "#" + data.classes[data.classes.findIndex(findCourseByCode($("#event-class").val()))].color;
+					}
+					let ccc = backC.split("#")[1];
+					let textC = ((parseInt(ccc.substring(0, 2), 16) * 0.299 + parseInt(ccc.substring(2, 4), 16) * 0.587 + parseInt(ccc.substring(4, 6), 16) * 0.114) > 186 ? "#000000" : "#FFFFFF")
+					$("body").css({
+						"color": textC
+					});
+					$("html").css({
+						"background": backC
+					});
+					$("#event-other-title").css({
+						"display": "none"
+					})
+				});
+
+				document.getElementById("addevent-cancel-btn").addEventListener("click", (e) => {
+					remote.getCurrentWindow().close();
+				});
+
+				document.getElementById("addevent-add-btn").addEventListener("click", (e) => {
+					if ($("#event-name").val() && $("#event-class").val() && $("#event-date").val() && $("#event-start-time").val() && $("#event-end-time").val()) {
+						fs.readFile(pt("calendar.json"), (err, data) => {
+							data = JSON.parse(data);
+							let d = new Date($("#event-date").val() + " " + $("#event-time").val());
+							let now = new Date();
+						});
+					} else {
+						$(".error").html("Please fill out all fields.");
+					}
+				});
+			}
+
+			var saltLength = 5;
+			var generateSalt = function() {
+				var set = '0123456789abcdefghijklmnopqurstuvwxyzABCDEFGHIJKLMNOPQURSTUVWXYZ';
+				var salt = '';
+				for (var i = 0; i < saltLength; i++) {
+					var p = Math.floor(Math.random() * set.length);
+					salt += set[p];
+				}
+				return salt;
+			};
+			var hash = function(str) {
+				return crypto.createHash('md5').update(str).digest('HEX');
+			};
+			var saltAndHash = function(pass) {
+				var salt = generateSalt();
+				return salt + hash(pass + salt) + hash(salt);
+			};
+
+			document.onreadystatechange = () => {
+				let dev = true;
+				if (document.readyState == "complete") {
+					const win = remote.getCurrentWindow();
+					if (dev) {
+						win.webContents.openDevTools();
+					}
+					init();
+				}
+			};
+
+		})();
+	</script>
+</body>
+
+</html>

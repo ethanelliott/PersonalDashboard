@@ -180,7 +180,7 @@
 								break;
 							case 'Calendar':
 								out += "<div class='row-wrapper'>";
-								out += "<button id='content-new-event-btn' class='right action-button'>+</button>";
+								out += "<button id='content-new-event-btn' class='hidden right action-button'>+</button>";
 								out += "</div>";
 								out += "<div id='calendar'></div>";
 								$("#pannel-content-wrapper").html(out);
@@ -585,6 +585,35 @@
 		}
 
 		function CalendarPageLoadEventRegister() {
+			$("#content-new-event-btn").click(() => {
+				const BrowserWindow = remote.BrowserWindow;
+				var win = new BrowserWindow({
+					parent: remote.getCurrentWindow(),
+					modal: true,
+					width: 400,
+					height: 750,
+					minHeight: 750,
+					minWidth: 400,
+					maxHeight: 750,
+					maxWidth: 400,
+					frame: false
+				});
+				win.on('close', () => {
+					remote.getCurrentWindow().show();
+					remote.getCurrentWindow().focus();
+					loadPageContent(1);
+				});
+				win.setMenu(null);
+				win.loadURL(url.format({
+					pathname: path.join(__dirname, '/addEvent.html'),
+					protocol: 'file:',
+					slashes: true
+				}));
+				win.once('ready-to-show', () => {
+					win.show();
+					win.focus();
+				});
+			});
 			let calendarEvents = [];
 			let filePath = "calendar.json";
 			fs.readFile(pt(filePath), 'utf8', (err, data) => {
@@ -613,6 +642,20 @@
 					}
 					calendarEvents.push(newCale);
 				}
+				/*
+				let custom_data = fs.readFileSync(pt("todo_list.json"), 'utf8');
+				custom_data = JSON.parse(custom_data);
+				for (let i = 0; i < custom_data.length; i++) {
+					let fullItemCalColor = (custom_data[i].code === "other" ? "000000" : classData.classes[classData.classes.findIndex(findCourse(custom_data[i].code))].color);
+					let newCale = {
+						title: custom_data[i].name,
+						start: moment(custom_data[i].date),
+						color: "#" + fullItemCalColor,
+						allDay: true
+					}
+					calendarEvents.push(newCale);
+				}
+				*/
 				$('#calendar').fullCalendar({
 					header: {
 						left: 'prev, next today',
@@ -886,11 +929,12 @@
 			console.log(remote.getGlobal('APDD'));
 			fs.stat(pt("content.json"), (err, stat) => {
 				if (err && err.code == 'ENOENT') {
-					mkdirp.sync(remote.getGlobal('APDD'));
-					let writeContent = '{"userName":"","pages": [{"title": "Overview"}, {"title": "Calendar"}, {"title": "Settings"}],"classes": []}';
+					let writeContent =
+						'{"userName":"","pages": [{"title": "Overview", "icon":"home"}, {"title": "Calendar", "icon": "calendar"}, {"title": "Notes", "icon": "sticky-note"}, {"title": "Grades", "icon": "percent"}, {"title": "Settings", "icon":"cog"}],"classes": []}';
 					fs.writeFileSync(pt('content.json'), writeContent);
 					fs.writeFileSync(pt('calendar.json'), "[]");
 					fs.writeFileSync(pt('todo_list.json'), "[]");
+					fs.writeFileSync(pt('notes.json'), "[]");
 					const BrowserWindow = remote.BrowserWindow;
 					var win = new BrowserWindow({
 						parent: remote.getCurrentWindow(),
@@ -919,6 +963,12 @@
 						win.show();
 						win.focus();
 					});
+				}
+				let newTestUpdate = JSON.parse(fs.readFileSync(pt('content.json')));
+				let updatePagesData = JSON.parse('[{"title": "Overview", "icon":"home"}, {"title": "Calendar", "icon": "calendar"}, {"title": "Notes", "icon": "sticky-note"}, {"title": "Grades", "icon": "percent"}, {"title": "Settings", "icon":"cog"}]');
+				if (!newTestUpdate.pages[0].icon) {
+					newTestUpdate.pages = updatePagesData;
+					fs.writeFileSync(pt('content.json'), JSON.stringify(newTestUpdate));
 				}
 
 				loadSideBar(() => {
