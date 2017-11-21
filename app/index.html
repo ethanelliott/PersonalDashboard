@@ -38,8 +38,8 @@
 	<div class="content-wrapper">
 		<div id="mainContentModal" class="modal">
 			<div class="modal-content">
-				<h1>Are you sure you want to delete this?</h1>
-				<h2>This cannot be undone...</h2>
+				<h1 id="mainContentModalHeader"></h1>
+				<h2 id="mainContentModalMessage"></h2>
 				<div style="display:flex;justify-content:flex-end; flex-direction:row;">
 					<button id="modal-confirm-btn" style="width:100px;margin-right:2vw;" class="button" type="button">Yes</button>
 					<button id="modal-cancel-btn" style="width:100px;margin-right:2vw;" class="button" type="button">Cancel</button>
@@ -70,6 +70,7 @@
 		const {
 			remote
 		} = electron;
+		const updater = remote.require('electron-simple-updater');
 		const dialog = remote.dialog;
 		const fs = require('fs');
 		const path = require('path')
@@ -102,7 +103,9 @@
 			return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
 		}
 
-		function showConfirmationDialog(callbackSuccess, callbackFailure) {
+		function showConfirmationDialog($header, $message, callbackSuccess, callbackFailure) {
+			$("#mainContentModalHeader").html($header);
+			$("#mainContentModalMessage").html($message);
 			$("#mainContentModal").css({
 				"display": "flex",
 				"opacity": 0
@@ -369,7 +372,7 @@
 								for (let i = 0; i < toDoArr.length; i++) {
 									moveProgressBar(toDoArr[i]);
 									$("#" + toDoArr[i].id + ".todo").click(() => {
-										showConfirmationDialog(() => {
+										showConfirmationDialog("Are you sure you want to delete this?", "This cannot be undone...", () => {
 											$("#" + toDoArr[i].id + ".todo").fadeOut();
 											setTimeout(() => {
 												$("#" + toDoArr[i].id + ".todo").remove();
@@ -488,7 +491,7 @@
 								for (let i = 0; i < toDoArr.length; i++) {
 									moveProgressBar(toDoArr[i]);
 									$("#" + toDoArr[i].id + ".todo").click(() => {
-										showConfirmationDialog(() => {
+										showConfirmationDialog("Are you sure you want to delete this?", "This cannot be undone...", () => {
 											$("#" + toDoArr[i].id + ".todo").fadeOut();
 											setTimeout(() => {
 												$("#" + toDoArr[i].id + ".todo").remove();
@@ -864,93 +867,100 @@
 		function init() {
 			console.log(remote.getGlobal('APDD'));
 			fs.stat(pt("content.json"), (err, stat) => {
-				if (err && err.code == 'ENOENT') {
-					mkdirp.sync(remote.getGlobal('APDD'));
-					let writeContent = '{"userName":"","pages": [{"title": "Overview"}, {"title": "Calendar"}, {"title": "Settings"}],"classes": []}';
-					fs.writeFileSync(pt('content.json'), writeContent);
-					fs.writeFileSync(pt('calendar.json'), "[]");
-					fs.writeFileSync(pt('todo_list.json'), "[]");
-					const BrowserWindow = remote.BrowserWindow;
-					var win = new BrowserWindow({
-						parent: remote.getCurrentWindow(),
-						modal: true,
-						width: 400,
-						height: 400,
-						minHeight: 400,
-						minWidth: 400,
-						maxHeight: 400,
-						maxWidth: 400,
-						frame: false
-					});
-					win.on('close', () => {
-						remote.getCurrentWindow().show();
-						remote.getCurrentWindow().focus();
-						loadSideBar(() => {});
-						loadPageContent(0);
-					});
-					win.setMenu(null);
-					win.loadURL(url.format({
-						pathname: path.join(__dirname, '/login.html'),
-						protocol: 'file:',
-						slashes: true
-					}));
-					win.once('ready-to-show', () => {
-						win.show();
-						win.focus();
-					});
-				}
-
-				loadSideBar(() => {
-					startTime();
-
-					document.getElementById("min-btn").addEventListener("click", (e) => {
-						const window = remote.getCurrentWindow();
-						window.minimize();
-					});
-					let max_state = false;
-					document.getElementById("max-btn").addEventListener("click", (e) => {
-						const window = remote.getCurrentWindow();
-						if (!max_state) {
-							window.maximize();
-							max_state = true;
-						} else {
-							window.unmaximize();
-							max_state = false;
-						}
-					});
-
-					document.getElementById("close-btn").addEventListener("click", (e) => {
-						const window = remote.getCurrentWindow();
-						window.close();
-					});
-
-					if (dev) {
-						document.getElementById("dev-btn").classList.remove("hidden");
-						document.getElementById("dev-btn").addEventListener("click", (e) => {
-							const win = remote.getCurrentWindow();
-							win.webContents.openDevTools();
-						});
-					} else {
-						document.getElementById("dev-btn").classList.add("hidden");
-					}
-
-					document.getElementById("full-btn").addEventListener("click", (e) => {
+					if (err && err.code == 'ENOENT') {
+						mkdirp.sync(remote.getGlobal('APDD'));
+						let writeContent = '{"userName":"","pages": [{"title": "Overview"}, {"title": "Calendar"}, {"title": "Settings"}],"classes": []}';
+						fs.writeFileSync(pt('content.json'), writeContent);
+						fs.writeFileSync(pt('calendar.json'), "[]");
+						fs.writeFileSync(pt('todo_list.json'), "[]");
 						const BrowserWindow = remote.BrowserWindow;
 						var win = new BrowserWindow({
-							width: 800,
-							height: 600,
+							parent: remote.getCurrentWindow(),
+							modal: true,
+							width: 400,
+							height: 400,
+							minHeight: 400,
+							minWidth: 400,
+							maxHeight: 400,
+							maxWidth: 400,
 							frame: false
 						});
+						win.on('close', () => {
+							remote.getCurrentWindow().show();
+							remote.getCurrentWindow().focus();
+							loadSideBar(() => {});
+							loadPageContent(0);
+						});
 						win.setMenu(null);
-						win.show();
-						win.focus();
 						win.loadURL(url.format({
-							pathname: path.join(__dirname, '/window.html'),
+							pathname: path.join(__dirname, '/login.html'),
 							protocol: 'file:',
 							slashes: true
 						}));
+						win.once('ready-to-show', () => {
+							win.show();
+							win.focus();
+						});
+					}
+
+					loadSideBar(() => {
+							startTime();
+
+							document.getElementById("min-btn").addEventListener("click", (e) => {
+								const window = remote.getCurrentWindow();
+								window.minimize();
+							});
+							let max_state = false;
+							document.getElementById("max-btn").addEventListener("click", (e) => {
+								const window = remote.getCurrentWindow();
+								if (!max_state) {
+									window.maximize();
+									max_state = true;
+								} else {
+									window.unmaximize();
+									max_state = false;
+								}
+							});
+
+							document.getElementById("close-btn").addEventListener("click", (e) => {
+								const window = remote.getCurrentWindow();
+								window.close();
+							});
+
+							if (dev) {
+								document.getElementById("dev-btn").classList.remove("hidden");
+								document.getElementById("dev-btn").addEventListener("click", (e) => {
+									const win = remote.getCurrentWindow();
+									win.webContents.openDevTools();
+								});
+							} else {
+								document.getElementById("dev-btn").classList.add("hidden");
+							}
+
+							document.getElementById("full-btn").addEventListener("click", (e) => {
+								const BrowserWindow = remote.BrowserWindow;
+								var win = new BrowserWindow({
+									width: 800,
+									height: 600,
+									frame: false
+								});
+								win.setMenu(null);
+								win.show();
+								win.focus();
+								win.loadURL(url.format({
+									pathname: path.join(__dirname, '/window.html'),
+									protocol: 'file:',
+									slashes: true
+								}));
+							});
+							updater.on('update-downloaded', () => {
+								showConfirmationDialog("New update available!", "Would you like to restart now?", () => {
+									updater.quitAndInstall();
+								}, () => {
+									//Do Nothing
+								});
+							}));
 					});
-				});
 			});
 		};
 
@@ -984,9 +994,6 @@
 		document.onreadystatechange = () => {
 			if (document.readyState == "complete") {
 				const win = remote.getCurrentWindow();
-				if (dev) {
-					win.webContents.openDevTools();
-				}
 				init();
 			}
 		};

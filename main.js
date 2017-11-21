@@ -1,6 +1,13 @@
-const {app, BrowserWindow, Menu} = require('electron')
-const path = require('path')
-const url = require('url')
+const {app, BrowserWindow, Menu} = require('electron');
+const path = require('path');
+const url = require('url');
+const updater = require('electron-simple-updater');
+
+updater.init({
+  checkUpdateOnStart: true,
+  autoDownload: true,
+  url: "https://raw.githubusercontent.com/ethanelliott/PersonalDashboard/master/updates.json"
+});
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -35,7 +42,7 @@ function createWindow () {
     pathname: path.join(__dirname, '/app/index.html'),
     protocol: 'file:',
     slashes: true
-  }))
+}));
 
   // Emitted when the window is closed.
   win.on('closed', () => {
@@ -43,7 +50,7 @@ function createWindow () {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     win = null
-  })
+});
 }
 
 // This method will be called when Electron has finished
@@ -58,7 +65,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
-})
+});
 
 app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
@@ -66,7 +73,7 @@ app.on('activate', () => {
   if (win === null) {
     createWindow()
   }
-})
+});
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.

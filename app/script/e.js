@@ -36,11 +36,43 @@
 			});
 			return this;
 		},
-		fadeOut: function($time) {
-			/*TODO: Add fadeOut fn*/
+		fadeOut: function($timeout) {
+			this.each(function() {
+				$timeout = $timeout || 400;
+				let el = this;
+				el.style.display = "inherit";
+				el.style.opacity = 1;
+				let last = +new Date();
+				let tick = () => {
+					el.style.opacity = +el.style.opacity - (new Date() - last) / $timeout;
+					last = +new Date();
+					if (+el.style.opacity > 0) {
+						(window.requestAnimationFrame && requestAnimationFrame(tick)) || setTimeout(tick, 16);
+					} else {
+						el.style.display = "none";
+					}
+				};
+				tick();
+			});
+			return this;
 		},
-		fadeIn: function($time) {
-			/*TODO: Add fadeIn fn*/
+		fadeIn: function($timeout) {
+			this.each(function() {
+				$timeout = $timeout || 400;
+				let el = this;
+				el.style.display = "inherit";
+				el.style.opacity = 0;
+				let last = +new Date();
+				let tick = () => {
+					el.style.opacity = +el.style.opacity + (new Date() - last) / $timeout;
+					last = +new Date();
+					if (+el.style.opacity < 1) {
+						(window.requestAnimationFrame && requestAnimationFrame(tick)) || setTimeout(tick, 16);
+					}
+				};
+				tick();
+			});
+			return this;
 		},
 		val: function() {
 			var len = this.length;
