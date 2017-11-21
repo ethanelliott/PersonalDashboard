@@ -1,5 +1,5 @@
 {
-    "win32-x64-prod": {
+    "": {
         "update": "https://github.com/ethanelliott/PersonalDashboard/releases/download/v1.5.9/UOITPD.Setup.1.5.9.exe",
         "install": "https://github.com/ethanelliott/PersonalDashboard/releases/download/v1.5.9/UOITPD.Setup.1.5.9.exe",
         "version": "1.5.9"
