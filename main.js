@@ -4,8 +4,8 @@ const url = require('url');
 const updater = require('electron-simple-updater');
 
 updater.init({
-  checkUpdateOnStart: true,
-  autoDownload: true,
+  checkUpdateOnStart: false,
+  autoDownload: false,
   url: "https://raw.githubusercontent.com/ethanelliott/PersonalDashboard/master/updates.json"
 });
 

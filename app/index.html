@@ -171,6 +171,10 @@
 								out += "<div class='line-break'></div>";
 								out += "<button id='mycampus-update-btn' class='button'>Update Data from MyCampus</button><br /><br />";
 								out += "<button id='exam-update-btn' class='button'>Get Personalized Exam Schedule</button><br /><br /><br /><br /><br /><br />";
+								out += "<div class='line-break'></div>";
+								out += "<p>Version: 1.6.0</p><br /><br /><br /><br /><br />";
+								out += "<button id='checkfor-update-btn' class='button'>Check for updates</button><br /><br /><br />";
+								out += "<p id='update-log'></p><br /><br /><br /><br /><br /><br />";
 								$("#pannel-content-wrapper").html(out);
 								SettingsPageLoadEventRegister();
 								break;
@@ -777,6 +781,20 @@
 				loadSideBar(() => {});
 			});
 
+			document.getElementById('checkfor-update-btn').addEventListener("click", (e) => {
+				updater.checkForUpdates();
+				updater.on('update-available', () => {
+					updater.downloadUpdate();
+				});
+				updater.on('update-downloaded', () => {
+					showConfirmationDialog("New update available!", "Would you like to restart now?", () => {
+						updater.quitAndInstall();
+					}, () => {
+						//Do Nothing
+					});
+				});
+			});
+
 			document.getElementById('content-randomColour-btn').addEventListener("click", (e) => {
 				let cont = JSON.parse(fs.readFileSync(pt("content.json"), 'utf8'));
 				for (let i = 0; i < cont.classes.length; i++) {
@@ -867,100 +885,118 @@
 		function init() {
 			console.log(remote.getGlobal('APDD'));
 			fs.stat(pt("content.json"), (err, stat) => {
-					if (err && err.code == 'ENOENT') {
-						mkdirp.sync(remote.getGlobal('APDD'));
-						let writeContent = '{"userName":"","pages": [{"title": "Overview"}, {"title": "Calendar"}, {"title": "Settings"}],"classes": []}';
-						fs.writeFileSync(pt('content.json'), writeContent);
-						fs.writeFileSync(pt('calendar.json'), "[]");
-						fs.writeFileSync(pt('todo_list.json'), "[]");
+				if (err && err.code == 'ENOENT') {
+					mkdirp.sync(remote.getGlobal('APDD'));
+					let writeContent = '{"userName":"","pages": [{"title": "Overview"}, {"title": "Calendar"}, {"title": "Settings"}],"classes": []}';
+					fs.writeFileSync(pt('content.json'), writeContent);
+					fs.writeFileSync(pt('calendar.json'), "[]");
+					fs.writeFileSync(pt('todo_list.json'), "[]");
+					const BrowserWindow = remote.BrowserWindow;
+					var win = new BrowserWindow({
+						parent: remote.getCurrentWindow(),
+						modal: true,
+						width: 400,
+						height: 400,
+						minHeight: 400,
+						minWidth: 400,
+						maxHeight: 400,
+						maxWidth: 400,
+						frame: false
+					});
+					win.on('close', () => {
+						remote.getCurrentWindow().show();
+						remote.getCurrentWindow().focus();
+						loadSideBar(() => {});
+						loadPageContent(0);
+					});
+					win.setMenu(null);
+					win.loadURL(url.format({
+						pathname: path.join(__dirname, '/login.html'),
+						protocol: 'file:',
+						slashes: true
+					}));
+					win.once('ready-to-show', () => {
+						win.show();
+						win.focus();
+					});
+				}
+
+				loadSideBar(() => {
+					startTime();
+
+					document.getElementById("min-btn").addEventListener("click", (e) => {
+						const window = remote.getCurrentWindow();
+						window.minimize();
+					});
+					let max_state = false;
+					document.getElementById("max-btn").addEventListener("click", (e) => {
+						const window = remote.getCurrentWindow();
+						if (!max_state) {
+							window.maximize();
+							max_state = true;
+						} else {
+							window.unmaximize();
+							max_state = false;
+						}
+					});
+
+					document.getElementById("close-btn").addEventListener("click", (e) => {
+						const window = remote.getCurrentWindow();
+						window.close();
+					});
+
+					if (dev) {
+						document.getElementById("dev-btn").classList.remove("hidden");
+						document.getElementById("dev-btn").addEventListener("click", (e) => {
+							const win = remote.getCurrentWindow();
+							win.webContents.openDevTools();
+						});
+					} else {
+						document.getElementById("dev-btn").classList.add("hidden");
+					}
+
+					document.getElementById("full-btn").addEventListener("click", (e) => {
 						const BrowserWindow = remote.BrowserWindow;
 						var win = new BrowserWindow({
-							parent: remote.getCurrentWindow(),
-							modal: true,
-							width: 400,
-							height: 400,
-							minHeight: 400,
-							minWidth: 400,
-							maxHeight: 400,
-							maxWidth: 400,
+							width: 800,
+							height: 600,
 							frame: false
 						});
-						win.on('close', () => {
-							remote.getCurrentWindow().show();
-							remote.getCurrentWindow().focus();
-							loadSideBar(() => {});
-							loadPageContent(0);
-						});
 						win.setMenu(null);
+						win.show();
+						win.focus();
 						win.loadURL(url.format({
-							pathname: path.join(__dirname, '/login.html'),
+							pathname: path.join(__dirname, '/window.html'),
 							protocol: 'file:',
 							slashes: true
 						}));
-						win.once('ready-to-show', () => {
-							win.show();
-							win.focus();
-						});
-					}
-
-					loadSideBar(() => {
-							startTime();
-
-							document.getElementById("min-btn").addEventListener("click", (e) => {
-								const window = remote.getCurrentWindow();
-								window.minimize();
-							});
-							let max_state = false;
-							document.getElementById("max-btn").addEventListener("click", (e) => {
-								const window = remote.getCurrentWindow();
-								if (!max_state) {
-									window.maximize();
-									max_state = true;
-								} else {
-									window.unmaximize();
-									max_state = false;
-								}
-							});
-
-							document.getElementById("close-btn").addEventListener("click", (e) => {
-								const window = remote.getCurrentWindow();
-								window.close();
-							});
-
-							if (dev) {
-								document.getElementById("dev-btn").classList.remove("hidden");
-								document.getElementById("dev-btn").addEventListener("click", (e) => {
-									const win = remote.getCurrentWindow();
-									win.webContents.openDevTools();
-								});
-							} else {
-								document.getElementById("dev-btn").classList.add("hidden");
-							}
-
-							document.getElementById("full-btn").addEventListener("click", (e) => {
-								const BrowserWindow = remote.BrowserWindow;
-								var win = new BrowserWindow({
-									width: 800,
-									height: 600,
-									frame: false
-								});
-								win.setMenu(null);
-								win.show();
-								win.focus();
-								win.loadURL(url.format({
-									pathname: path.join(__dirname, '/window.html'),
-									protocol: 'file:',
-									slashes: true
-								}));
-							});
-							updater.on('update-downloaded', () => {
-								showConfirmationDialog("New update available!", "Would you like to restart now?", () => {
-									updater.quitAndInstall();
-								}, () => {
-									//Do Nothing
-								});
-							}));
 					});
+					updater.setOptions('logger', {
+						info(text) {
+							let log = $("#update-log").html();
+							log += "[INFO] " + text + "<br />";
+							$("#update-log").html(log);
+							console.log("[INFO] " + text);
+						},
+						warn(text) {
+							let log = $("#update-log").html();
+							log += "[WARN] " + text + "<br />";
+							$("#update-log").html(log);
+							console.log("[WARN] " + text);
+						}
+					});
+					updater.checkForUpdates();
+					updater.on('update-available', () => {
+						updater.downloadUpdate();
+					});
+					updater.on('update-downloaded', () => {
+						showConfirmationDialog("New update available!", "Would you like to restart now?", () => {
+							updater.quitAndInstall();
+						}, () => {
+							//Do Nothing
+						});
+					});
+				});
 			});
 		};
 
@@ -994,7 +1030,6 @@
 		document.onreadystatechange = () => {
 			if (document.readyState == "complete") {
 				const win = remote.getCurrentWindow();
-				win.webContents.openDevTools();
 				init();
 			}
 		};
