@@ -1,17 +1,22 @@
 {
     "name": "UOITPD",
-    "version": "1.6.0",
+    "version": "1.5.9",
     "description": "A personal dashboard for UOIT students.",
     "main": "main.js",
     "build": {
         "appId": "com.ethan.uoit.personaldash.app",
         "win": {
+            "target": [{
+                "target": "squirrel"
+            }],
             "icon": "icon.ico"
         }
     },
     "dependencies": {
         "cheerio": "^1.0.0-rc.2",
         "crypto": "^1.0.1",
+        "electron-builder-lib": "^19.46.3",
+        "electron-builder-squirrel-windows": "^19.46.0",
         "electron-drag": "^1.2.0",
         "electron-simple-updater": "^1.2.3",
         "electron-sticky-shim": "gist:4c7dd81a61adcb648944a16b0fac717f",
