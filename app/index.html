@@ -994,6 +994,7 @@
 		document.onreadystatechange = () => {
 			if (document.readyState == "complete") {
 				const win = remote.getCurrentWindow();
+				win.webContents.openDevTools();
 				init();
 			}
 		};
