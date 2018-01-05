@@ -134,8 +134,8 @@
 					let dd = new Date();
 					let cM = dd.getMonth() + 1;
 					let termDate = "";
-					if (cM > 0 && cM < 9) {
-						termDate = dd.getFullYear() + "01";
+					if ((cM > 0 && cM < 5)) {
+						termDate = (dd.getFullYear()) + "01";
 					} else if (cM > 8 && cM < 13) {
 						termDate = dd.getFullYear() + "09";
 					}
@@ -245,6 +245,7 @@
 											let dateRange = CRNS[i].times[j].dateRange.split(" - ");
 											let startTimeDateObject;
 											let endTimeDateObject;
+											console.log(dateRange);
 											if (dateRange[0] === dateRange[1]) {
 												startTimeDateObject = new Date(dateRange[0] + " " + CRNS[i].times[j].startTime);
 												endTimeDateObject = new Date(dateRange[0] + " " + CRNS[i].times[j].endTime);
@@ -263,14 +264,17 @@
 												var dateRangeWeeks = Math.floor((new Date(dateRange[1]).getTime() - new Date(dateRange[0]).getTime()) / (1000 * 60 * 60 * 24 * 7));
 												let start = new Date(dateRange[0]);
 												let end = new Date(dateRange[1]);
+												console.log("Before", start);
 												let delta = (start.getDay() - weekdayReference[CRNS[i].times[j].day]);
+												console.log("Delta", delta);
 												if (!isNaN(delta)) {
 													if (delta > 0) {
 														start.setTime(start.getTime() + ((7 - delta) * 1000 * 60 * 60 * 24));
 													} else {
-														start.setTime(start.getTime() + ((-1 * delta) * 1000 * 60 * 60 * 24));
+														start.setTime(start.getTime() + ((-delta - 1) * 1000 * 60 * 60 * 24));
 													}
 												}
+												console.log("After", start);
 												for (let g = 0; g <= dateRangeWeeks; g++) {
 													let classDateThing = new Date();
 													classDateThing.setTime(start.getTime() + ((7) * 1000 * 60 * 60 * 24 * g));
@@ -295,11 +299,11 @@
 
 										}
 									}
-
 									let calendarFilePath = "calendar.json";
 									calArr.sort((a, b) => {
 										return a.startTime - b.startTime;
 									});
+									console.log(calArr);
 									fs.writeFileSync(pt(calendarFilePath), JSON.stringify(calArr));
 									let filePath = "content.json";
 									fs.readFile(pt(filePath), 'utf8', (err, data) => {
@@ -327,7 +331,7 @@
 											if (err) {
 												throw err;
 											}
-											remote.getCurrentWindow().close();
+											//remote.getCurrentWindow().close();
 										});
 									});
 								});
@@ -358,7 +362,7 @@
 			document.onreadystatechange = function() {
 				if (document.readyState == "complete") {
 					const win = remote.getCurrentWindow();
-					//win.webContents.openDevTools();
+					win.webContents.openDevTools();
 					init();
 				}
 			};

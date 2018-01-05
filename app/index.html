@@ -15,6 +15,7 @@
 	<script src="../app/script/moment.min.js"></script>
 	<script src='../app/script/fullcalendar.js'></script>
 	<script src="../app/script/jquery.countdown.min.js"></script>
+	<script src="../app/script/masonry.min.js"></script>
 	<script>
 		if (window.module) module = window.module;
 	</script>
@@ -46,12 +47,13 @@
 				</div>
 			</div>
 		</div>
-		<div id="note-modal" class="modal">
-			<div class="modal-content">
-				<h1>Title</h1>
-				<p>reminder to do thing</p>
+		<div id="noteModal" class="modal">
+			<div class="modal-content" style="width: 40vw;max-width: 50vw;">
+				<h1 id="noteModalTitle" contenteditable="true"></h1>
+				<h2 id="noteModalcontent" contenteditable="true"></h2>
 				<div style="display:flex;justify-content:flex-end; flex-direction:row;">
-					<button id="modal-save-btn" style="width:100px;margin-right:2vw;" class="button" type="button">Save</button>
+					<button id="note-modal-save-btn" style="width:100px;margin-right:2vw;" class="button" type="button">Save</button>
+					<button id="note-modal-cancel-btn" style="width:100px;margin-right:2vw;" class="button" type="button">Cancel</button>
 				</div>
 			</div>
 		</div>
@@ -83,6 +85,10 @@
 		var jqMenuList = [];
 		var menuListContent = [];
 		var screenUpdateInterval;
+
+		function checkHexLevel($hex) {
+			return ((parseInt($hex.substring(0, 2), 16) * 0.299 + parseInt($hex.substring(2, 4), 16) * 0.587 + parseInt($hex.substring(4, 6), 16) * 0.114) > 186 ? "#000000" : "#FFFFFF");
+		}
 
 		function colorFade(col, amt) {
 			var usePound = false;
@@ -135,6 +141,38 @@
 			});
 		}
 
+		function showNoteEdit($header, $message, callbackSuccess, callbackFailure) {
+			$("#noteModalTitle").html($header);
+			$("#noteModalcontent").html($message);
+			$("#noteModal").css({
+				"display": "flex",
+				"opacity": 0
+			});
+			$("#noteModal").animate({
+				"opacity": 1
+			}, 200);
+			$("#note-modal-save-btn").off().click(() => {
+				$("#noteModal").animate({
+					"opacity": 0
+				}, 200, () => {
+					$("#noteModal").css({
+						"display": "none"
+					});
+				});
+				callbackSuccess($("#noteModalTitle").html(), $("#noteModalcontent").html());
+			});
+			$("#note-modal-cancel-btn").off().click(() => {
+				$("#noteModal").animate({
+					"opacity": 0
+				}, 200, () => {
+					$("#noteModal").css({
+						"display": "none"
+					});
+				});
+				callbackFailure();
+			});
+		}
+
 		function loadPageContent(menuListArrayIndex) {
 			jsonContent = menuListContent[menuListArrayIndex];
 			if (jsonContent != undefined) {
@@ -157,8 +195,7 @@
 										"<td>" + data.classes[i].name + "</td>" +
 										"<td>" + data.classes[i].title + "</td>" +
 										"<td><input id='content-icon-" + data.classes[i].name + "' type='text' value='" + data.classes[i].icon + "' /></td>" +
-										"<td style='color:" + ((parseInt(data.classes[i].color.substring(0, 2), 16) * 0.299 + parseInt(data.classes[i].color.substring(2, 4), 16) * 0.587 + parseInt(data.classes[i].color.substring(4, 6), 16) * 0.114) > 186 ? "#000000" :
-											"#FFFFFF") +
+										"<td style='color:" + checkHexLevel(data.classes[i].color) +
 										";background:#" + data.classes[i].color + ";display:flex;'><input style='flex:1;' onkeyup='$(this).parent().css({\"background\":$(this).val()});$(this).next().val($(this).val())' id='content-color-" + data.classes[i].name +
 										"' type='text' value='#" + data.classes[i].color +
 										"' /><input id='content-color-input-" + data.classes[i].name + "' style='width:100%;height:3em;flex:4;' onchange='$(this).prev().val($(this).val());$(this).parent().css({\"background\":$(this).val()});' type='color' value='#" +
@@ -192,16 +229,34 @@
 								out += "<button id='content-new-note-btn' class='right action-button'>+</button>";
 								out += "</div>";
 								out += "<div class='column-wrapper' style='display:flex;justify-content:center;align-items:center;'>";
-								out += "<div class='notes-wrapper'>";
-								for (let i = 0; i < 10; i++) {
-									out += "<div id='" + saltAndHash("wednesdaymydudes") + "' class='note' style='height:" + ((Math.random() * 350) + 100) + "px;' draggable='false'>";
-									out += "<h1 class='note-title' contenteditable='false'>Title</h1>";
-									out += "<p class='note-text' contenteditable='false'>reminder to do thing</p>";
+								out += "<div class='grid' data-masonry='{ \"itemSelector\": \".note\", \"columnWidth\": 10 }'>";
+								let noteData = JSON.parse(fs.readFileSync(pt("notes.json")));
+								for (let i = 0; i < noteData.length; i++) {
+									out += "<div id='" + noteData[i].id + "' class='note' style='background:#" + noteData[i].color + ";color:" + checkHexLevel(noteData[i].color) + " !important;' draggable='false'>";
+									out += "<h1 class='note-title' contenteditable='false'>" + noteData[i].title + "</h1>";
+									out += "<p class='note-text' contenteditable='false'>" + noteData[i].text + "</p>";
 									out += "</div>";
 								}
 								out += "</div>";
 								out += "</div>";
 								$("#pannel-content-wrapper").html(out);
+								$('.grid').masonry({
+									itemSelector: '.note',
+									columnWidth: 10
+								});
+								for (let i = 0; i < noteData.length; i++) {
+									$("#" + noteData[i].id + ".note").click(() => {
+										showNoteEdit(noteData[i].title, noteData[i].text, ($title, $text) => {
+											noteData[i].title = $title;
+											noteData[i].text = $text;
+											console.log(noteData);
+											fs.writeFileSync(pt("notes.json"), JSON.stringify(noteData));
+											loadPageContent(2);
+										}, () => {
+											//Do nothing
+										});
+									});
+								}
 								break;
 							case 'Grades':
 								out += "<div class='row-wrapper'>";
@@ -412,7 +467,7 @@
 								break;
 							default:
 								var countDownsArr = [];
-								out += "<div class='title'>" + jsonContent.title + "</div>";
+								out += "<div class='title'><i class='fa fa-" + jsonContent.icon + "' aria-hidden='true'></i>&nbsp;" + jsonContent.title + "&nbsp;&mdash;&nbsp;" + jsonContent.name + "</div>";
 								out += "<div class='row-wrapper'>";
 								out += "<div class='column' style='width:100%;padding:1em;'>" +
 									"<div class='column-content'>";
@@ -429,7 +484,7 @@
 								}
 								out += "</div>";
 								out += "<div class='column-content'>";
-								out += "<h1>TEST</h1>";
+								out += "<h1>" + JSON.stringify(jsonContent) + "</h1>";
 								out += "</div>"
 								out += "</div>";
 								out += "<div class='column' style='width:100%;padding:1em;'>" +
@@ -802,7 +857,7 @@
 			var timeObject = setInterval(() => {
 				let d = new Date();
 				let cl = (d.getHours() < 10 ? "0" : "") + d.getHours() + ":" + (d.getMinutes() < 10 ? "0" : "") + d.getMinutes() + ":" + (d.getSeconds() < 10 ? "0" : "") + d.getSeconds();
-				$("#time").html(cl);
+				$("#time").html(d.toLocaleTimeString());
 			}, 100);
 
 		}
@@ -969,6 +1024,7 @@
 				if (!newTestUpdate.pages[0].icon) {
 					newTestUpdate.pages = updatePagesData;
 					fs.writeFileSync(pt('content.json'), JSON.stringify(newTestUpdate));
+					fs.writeFileSync(pt('notes.json'), "[]");
 				}
 
 				loadSideBar(() => {

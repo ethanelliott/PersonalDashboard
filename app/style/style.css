@@ -129,6 +129,7 @@ input.large {
 .action-button:hover {
     box-shadow: 0 0 20px 3px rgba(0, 0, 0, 0.8);
     cursor: pointer;
+    opacity: 0.8;
 }
 
 .action-button:hover>*>* {
@@ -557,32 +558,19 @@ h2 {
 
 /*Notes*/
 
-.notes-wrapper {
-    column-count: 4;
+.grid {
+    width: 100%;
 }
 
-@media only screen and (max-width: 1920px) {
-    .notes-wrapper {
-        column-count: 3;
-    }
-}
-
-@media only screen and (max-width: 1550px) {
-    .notes-wrapper {
-        column-count: 2;
-    }
-}
-
-@media only screen and (max-width: 1186px) {
-    .notes-wrapper {
-        column-count: 1;
-    }
+.grid:after {
+    content: '';
+    display: block;
+    clear: both;
 }
 
 .note {
     color: black !important;
     width: 300px;
-    display: inline-block;
     padding: 2em;
     margin: 1em;
     padding-top: 0.6em;
@@ -596,6 +584,7 @@ h2 {
 .note:hover {
     box-shadow: 0 0 20px 5px rgba(0, 0, 0, 0.8);
     cursor: pointer;
+    opacity: 0.8;
 }
 
 .note:hover>* {
@@ -609,6 +598,10 @@ h1.note-title {
 }
 
 p.note-text {
+    font-size: 1.5em;
+}
+
+.note>div {
     font-size: 1.5em;
 }
 
